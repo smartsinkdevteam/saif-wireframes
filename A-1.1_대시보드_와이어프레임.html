@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-1.1 대시보드 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+    --ok: #1d7a4f; --ok-bg: #e3f4ec;
+    --purple: #6b4fa5; --purple-bg: #efe9f8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1240px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .stage { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+  .frame-col { display: flex; flex-direction: column; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; }
+  .case-tag small { font-weight: 400; color: var(--ink-soft); font-size: 12px; margin-left: 8px; }
+
+  .desktop { width: 1180px; max-width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; min-height: 560px; }
+  .sidebar { width: 176px; background: var(--surface); border-right: 1px solid var(--line-soft); padding: 16px 12px; flex-shrink: 0; }
+  .sidebar .brand { font-size: 15px; font-weight: 800; letter-spacing: 0.04em; padding: 0 8px 14px; }
+  .nav { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
+  .nav .it { padding: 8px 10px; border-radius: 8px; color: var(--ink-soft); }
+  .nav .it.grp { font-weight: 700; color: var(--ink); margin-top: 6px; }
+  .nav .it.sub { padding-left: 22px; }
+  .nav .it.on { background: var(--accent-bg); color: var(--accent); font-weight: 700; }
+  .main { flex: 1; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .top-bar { display: flex; align-items: center; }
+  .top-bar h2 { font-size: 17px; font-weight: 700; }
+  .top-bar .today { font-size: 12px; color: var(--ink-soft); margin-left: 10px; }
+  .profile { margin-left: auto; font-size: 12px; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-soft); border-radius: 99px; padding: 6px 12px; }
+
+  .sec-label { font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: -6px; }
+
+  /* 주간 캘린더 */
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 11px; padding: 8px; min-height: 116px; }
+  .day.today { border: 1.5px solid var(--accent); background: #f3f8fd; }
+  .day .d-head { font-size: 10.5px; color: var(--ink-faint); margin-bottom: 6px; }
+  .day.sun .d-head { color: #c0504d; }
+  .day.sat .d-head { color: #4d6bc0; }
+  .day.today .d-head { color: var(--accent); font-weight: 700; }
+  .evt { font-size: 10px; border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; line-height: 1.45; }
+  .evt.measure { background: var(--accent-bg); color: var(--accent); }
+  .evt.build { background: var(--ok-bg); color: var(--ok); }
+  .evt .ty { font-size: 9px; opacity: 0.85; font-weight: 700; }
+  .evt .ad { font-weight: 700; }
+  .evt .it { display: block; font-weight: 400; }
+  .evt .tech { display: block; font-weight: 400; opacity: 0.85; }
+  .week-empty { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 11px; padding: 28px 0; text-align: center; font-size: 12px; color: var(--ink-soft); }
+
+  /* 액션 필요 카드 */
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .act-card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 13px 16px; display: flex; align-items: center; gap: 12px; }
+  .act-card .num { font-size: 24px; font-weight: 800; }
+  .act-card .num.warn { color: var(--warn); }
+  .act-card .num.err { color: var(--error); }
+  .act-card .tx { font-size: 12px; font-weight: 600; }
+  .act-card .tx small { display: block; font-size: 10px; font-weight: 400; color: var(--ink-faint); margin-top: 2px; }
+  .act-card .go { margin-left: auto; font-size: 13px; color: var(--ink-faint); }
+  .act-card.zero { justify-content: center; color: var(--ink-soft); font-size: 12px; }
+
+  /* 진행 보드 */
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
+  .col { background: #f1f0eb; border-radius: 12px; padding: 8px; }
+  .col h6 { font-size: 11px; font-weight: 700; color: var(--ink-soft); padding: 2px 4px 8px; display: flex; align-items: center; gap: 5px; }
+  .col h6 .cnt { font-size: 10px; color: var(--ink-faint); font-weight: 400; }
+  .kcard { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 9px; padding: 8px 9px; margin-bottom: 6px; font-size: 11px; }
+  .kcard .addr { font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .kcard .ph { font-size: 10px; color: var(--ink-soft); font-family: ui-monospace, monospace; margin-top: 2px; }
+  .kcard .item { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+  .kcard .crow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .kbdg { display: inline-block; font-size: 8.5px; font-weight: 700; border-radius: 99px; padding: 2px 7px; }
+  .kbdg.hold { background: var(--warn-bg); color: var(--warn); }
+  .kbdg.prod { background: var(--purple-bg); color: var(--purple); }
+  .kbdg.dday { background: var(--accent-bg); color: var(--accent); }
+  .pchip { font-size: 8.5px; font-weight: 700; border-radius: 99px; padding: 2px 7px; }
+  .pchip.wait { background: var(--warn-bg); color: var(--warn); }
+  .pchip.part { background: #f1f0ea; color: var(--ink-soft); }
+  .pchip.done { background: var(--ok-bg); color: var(--ok); }
+  .col .col-empty { font-size: 10px; color: var(--ink-faint); text-align: center; padding: 14px 0; }
+
+  .error-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; }
+  .error-wrap p { font-size: 13px; color: var(--error); }
+  .error-wrap .act { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; border-radius: 9px; padding: 10px 18px; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1240px; margin: 36px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 다품목 개편 반영</div>
+  <h1>A-1.1 대시보드 <small>관리자(슈퍼·일반 공통) / 데스크톱 웹 / 케이스 3종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 1 — 기본 <small>주간 캘린더 + 액션 필요 건수 카드 + 진행 보드(칸반)</small></div>
+    <div class="desktop">
+      <div class="sidebar">
+        <div class="brand">SAIF</div>
+        <div class="nav">
+          <div class="it on">🏠 대시보드 <span class="marker">1</span></div>
+          <div class="it">📋 주문 관리</div>
+          <div class="it">👷 기사 관리</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="top-bar">
+          <h2>대시보드 <span class="marker">2</span></h2>
+          <span class="profile">박관리 ▾</span>
+        </div>
+
+        <div class="sec-label">이번 주 일정 <span class="marker">3</span></div>
+        <div class="week">
+          <div class="day sun"><div class="d-head">일 8</div></div>
+          <div class="day"><div class="d-head">월 9</div>
+            <div class="evt build"><span class="ty">시공</span><span class="ad">마곡동</span><span class="it">냉장고장</span><span class="tech">최하은</span></div>
+          </div>
+          <div class="day"><div class="d-head">화 10</div></div>
+          <div class="day"><div class="d-head">수 11</div>
+            <div class="evt measure"><span class="ty">실측</span><span class="ad">학익동</span><span class="it">냉장고장 외 1건</span><span class="tech">이서준</span></div>
+          </div>
+          <div class="day today"><div class="d-head">목 12 (오늘)</div>
+            <div class="evt measure"><span class="ty">실측</span><span class="ad">청라동</span><span class="it">냉장고장</span><span class="tech">한지우 <span class="marker" style="width:14px;height:14px;font-size:9px;">4</span></span></div>
+            <div class="evt build"><span class="ty">시공</span><span class="ad">부천 중동</span><span class="it">신발장</span><span class="tech">박도윤</span></div>
+          </div>
+          <div class="day"><div class="d-head">금 13</div>
+            <div class="evt build"><span class="ty">시공</span><span class="ad">마곡동</span><span class="it">냉장고장</span><span class="tech">최하은</span></div>
+          </div>
+          <div class="day sat"><div class="d-head">토 14</div></div>
+        </div>
+
+        <div class="sec-label">액션 필요 <span class="marker">5</span></div>
+        <div class="action-row">
+          <div class="act-card"><span class="num err">3</span><span class="tx">잔금 미입금<small>시공 완료 · 결제 상태 "잔금 대기"인 건수</small></span><span class="go">›</span></div>
+          <div class="act-card"><span class="num warn">2</span><span class="tx">기사 미배정<small>실측 기사 미배정 또는 시공 미배정 품목이 있는 건수</small></span><span class="go">›</span></div>
+        </div>
+
+        <div class="sec-label">진행 보드 <span class="marker">6</span></div>
+        <div class="board">
+          <div class="col">
+            <h6>접수 <span class="cnt">2건</span></h6>
+            <div class="kcard">
+              <div class="addr">송도동 <span class="marker" style="width:14px;height:14px;font-size:9px;">7</span></div>
+              <div class="ph">010-3456-7890</div>
+              <div class="item">냉장고장</div>
+              <div class="crow"><span class="kbdg dday">실측 D-3 <span class="marker" style="width:12px;height:12px;font-size:8px;">8</span></span></div>
+            </div>
+            <div class="kcard">
+              <div class="addr">청라동 <span class="kbdg hold">보류 <span class="marker" style="width:12px;height:12px;font-size:8px;">9</span></span></div>
+              <div class="ph">010-1122-3344</div>
+              <div class="item">냉장고장 외 1건</div>
+              <div class="crow"><span class="kbdg dday">실측 D-0</span></div>
+            </div>
+          </div>
+          <div class="col">
+            <h6>실측 완료 <span class="cnt">1건</span></h6>
+            <div class="kcard">
+              <div class="addr">학익동</div>
+              <div class="ph">010-5566-7788</div>
+              <div class="item">냉장고장 외 1건</div>
+              <div class="crow"><span class="pchip wait">착수금 대기</span></div>
+            </div>
+          </div>
+          <div class="col">
+            <h6>생산 <span class="cnt">1건</span></h6>
+            <div class="kcard">
+              <div class="addr">마곡동</div>
+              <div class="ph">010-9900-1122</div>
+              <div class="item">냉장고장 외 2건</div>
+              <div class="crow"><span class="kbdg prod">1/3 품목 <span class="marker" style="width:12px;height:12px;font-size:8px;">A</span></span><span class="pchip wait">잔금 대기</span></div>
+            </div>
+          </div>
+          <div class="col">
+            <h6>시공 완료 <span class="cnt">1건</span></h6>
+            <div class="kcard">
+              <div class="addr">부천 중동</div>
+              <div class="ph">010-3300-4455</div>
+              <div class="item">신발장</div>
+              <div class="crow"><span class="pchip wait">잔금 대기</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 빈 상태 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 2 — 빈 상태 <small>일정 없음 · 액션 필요 0건</small></div>
+    <div class="desktop" style="min-height:420px;">
+      <div class="sidebar">
+        <div class="brand">SAIF</div>
+        <div class="nav">
+          <div class="it on">🏠 대시보드</div>
+          <div class="it">📋 주문 관리</div>
+          <div class="it">👷 기사 관리</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="top-bar"><h2>대시보드</h2><span class="profile">박관리 ▾</span></div>
+        <div class="sec-label">이번 주 일정</div>
+        <div class="week-empty">이번 주 예정된 일정이 없습니다. <span class="marker">B</span></div>
+        <div class="sec-label">액션 필요</div>
+        <div class="action-row">
+          <div class="act-card zero">처리할 항목이 없습니다. <span class="marker">C</span></div>
+          <div class="act-card zero">처리할 항목이 없습니다.</div>
+        </div>
+        <div class="sec-label">진행 보드</div>
+        <div class="board" style="min-height:120px;">
+          <div class="col"><h6>접수 <span class="cnt">0건</span></h6><div class="col-empty">—</div></div>
+          <div class="col"><h6>실측 완료 <span class="cnt">0건</span></h6><div class="col-empty">—</div></div>
+          <div class="col"><h6>생산 <span class="cnt">0건</span></h6><div class="col-empty">—</div></div>
+          <div class="col"><h6>시공 완료 <span class="cnt">0건</span></h6><div class="col-empty">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 조회 실패 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 3 — 조회 실패 <small>"대시보드를 불러올 수 없습니다…" + [다시 시도]</small></div>
+    <div class="desktop" style="min-height:380px;">
+      <div class="sidebar">
+        <div class="brand">SAIF</div>
+        <div class="nav">
+          <div class="it on">🏠 대시보드</div>
+          <div class="it">📋 주문 관리</div>
+          <div class="it">👷 기사 관리</div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="top-bar"><h2>대시보드</h2><span class="profile">박관리 ▾</span></div>
+        <div class="error-wrap">
+          <p>⚠️ 대시보드를 불러올 수 없습니다. 새로고침해주세요. <span class="marker">D</span></p>
+          <span class="act">다시 시도</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 A-1.1 + 다품목 개편)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: 로그인 직후 자동 이동 / 좌측 사이드바 "대시보드". 슈퍼·일반 관리자 공통.</li>
+    <li><span class="marker">2</span> 헤더: 화면명 "대시보드"만 표시 — 오늘 날짜 표기는 제거(오늘 식별은 주간 캘린더의 오늘 강조로 충분).</li>
+    <li><span class="marker">3</span> 주간 캘린더 요일: <b>일–토</b>로 변경(기존 월–일). 일=빨강·토=파랑 헤더, 오늘 강조. 작업 유형(실측/시공)은 색·배지로 구분.</li>
+    <li><span class="marker">4</span> 일정 항목 표시 개편: <b>주소(동 단위) · 품목(예: "냉장고장 외 1건") · 기사 이름</b>. 다품목이면 "외 N건"으로 요약. 항목 클릭 → [A-2.3 주문 상세].</li>
+    <li><span class="marker">5</span> 액션 필요 건수 카드 2종 — 잔금 미입금(시공 완료·결제 "잔금 대기") / 기사 미배정(실측 기사 미배정이거나 시공 기사 미배정 품목 있는 건수). 클릭 시 해당 조건으로 필터된 [A-2.1 주문 목록]으로 이동.</li>
+    <li><span class="marker">6</span> 진행 보드(칸반): 접수 / 실측 완료 / 생산 / 시공 완료 4칸. 진행 중인 주문만 표시(종료·취소 제외). 진행 상태와 결제 상태는 독립 축.</li>
+    <li><span class="marker">7</span> 카드 표시 개편: 첫 줄 <b>주소(동)</b> → 둘째 줄 <b>전화번호</b> → 셋째 줄 <b>품목</b>(다품목 "외 N건") → 하단 <b>결제 상태 chip</b>. 카드 클릭 → [A-2.3 주문 상세].</li>
+    <li><span class="marker">8</span> 접수/실측 단계 카드: 일정(실측일) 대신 <b>"실측 D-day"</b> 배지로 표기(예: 실측 D-3, 당일 D-0).</li>
+    <li><span class="marker">9</span> 보류 주문: 별도 칸 없이 카드 배지로 표시(1차 간소 처리).</li>
+    <li><span class="marker">A</span> 생산 칸 카드: 시공 준비된 품목 수 배지(예: 1/3 품목) — 품목별 생산 체크리스트(N/A 제외) 완료 여부 종합. 다품목 진척을 분수로.</li>
+    <li><span class="marker">B</span> 캘린더 일정 없음: "이번 주 예정된 일정이 없습니다."</li>
+    <li><span class="marker">C</span> 액션 필요 0건: "처리할 항목이 없습니다."</li>
+    <li><span class="marker">D</span> 조회 실패: "대시보드를 불러올 수 없습니다. 새로고침해주세요." + [다시 시도].</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>섹션 배치 순서(캘린더 → 액션 카드 → 보드)와 라벨, 실측=파랑/시공=초록 색 구분, 결제 chip·D-day 배지 색, 카드 줄 구성은 임의 — 확정 필요.</li>
+    <li>이전/다음 주 이동 화살표는 추후 범위 제외 규칙에 따라 미표시. AS 칸은 1차 범위 외(추후 칸반 오른쪽 편입 예정).</li>
+    <li>일정·주문·전화번호 데이터는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

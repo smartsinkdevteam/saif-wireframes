@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-3.2 기사 등록 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1180px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .case-label { max-width: 1180px; margin: 36px auto 10px; font-size: 14px; font-weight: 700; }
+  .case-label small { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; margin-left: 8px; }
+
+  .screen { max-width: 1180px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; }
+  .gnb { width: 188px; flex-shrink: 0; border-right: 1px solid var(--line-soft); padding: 18px 12px; font-size: 13px; }
+  .gnb .logo { font-size: 15px; font-weight: 700; padding: 4px 10px 18px; }
+  .gnb .item { padding: 8px 10px; border-radius: 6px; color: var(--ink-soft); margin-bottom: 2px; }
+  .gnb .item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; min-width: 0; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  .profile-chip { font-size: 12.5px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; background: var(--surface); }
+  .page-head { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .page-head h2 { font-size: 18px; font-weight: 700; }
+
+  .btn { font-size: 13px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: default; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+
+  .section { border: 1px solid var(--line-soft); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .section h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; color: var(--ink-soft); }
+  .field label .req { color: var(--error); }
+  .field label .opt { color: var(--ink-faint); font-size: 11px; }
+  .input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink-faint); min-height: 36px; display: flex; align-items: center; }
+  .input.filled { color: var(--ink); }
+  .input.readonly { background: var(--paper); }
+  .input.error { border-color: var(--error); }
+  .input-row { display: flex; gap: 8px; }
+  .input-row .input { flex: 1; }
+  .err-msg { font-size: 11.5px; color: var(--error); }
+  .hint { font-size: 11.5px; color: var(--ink-faint); }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .check-group { display: flex; gap: 18px; flex-wrap: wrap; }
+  .box { width: 15px; height: 15px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .box.err { border-color: var(--error); }
+  .caret { font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+
+  .upload { border: 1.5px dashed var(--line); border-radius: 8px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--ink-faint); font-size: 12.5px; }
+  .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .toast.ok { background: #eaf3de; color: #3b6d11; border: 1px solid #cfe3b4; }
+
+  .modal-stage { max-width: 1180px; margin: 0 auto; min-height: 260px; background: rgba(44,44,42,0.45); border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 30px; }
+  .modal { background: var(--surface); border-radius: 10px; width: 380px; max-width: 100%; padding: 20px 22px; }
+  .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { font-size: 13.5px; line-height: 1.7; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1180px; margin: 28px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  @media (max-width: 860px) {
+    .screen { flex-direction: column; }
+    .gnb { width: 100%; border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>A-3.2 기사 등록 <small>관리자 / 데스크톱 웹 / 케이스 4종</small></h1>
+</div>
+
+<!-- ───────── 케이스 1: 기본 ───────── -->
+<div class="case-label" style="margin-top:0;">케이스 1 — 기본 <small>초기 빈 폼 · 초기 비밀번호는 [자동 생성] 사용 예시</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="page-head"><h2>기사 등록 <span class="marker">1</span></h2></div>
+
+    <div class="section">
+      <h3>계정 정보 (필수)</h3>
+      <div class="grid">
+        <div class="field">
+          <label>이름 <span class="req">*</span></label>
+          <div class="input">1–20자</div>
+        </div>
+        <div class="field">
+          <label>휴대전화번호 (아이디로 사용) <span class="req">*</span> <span class="marker">2</span></label>
+          <div class="input">010-0000-0000 (자동 하이픈)</div>
+          <p class="hint">기사 로그인 아이디로 사용 · 전체 시스템 중복 불가</p>
+        </div>
+        <div class="field full">
+          <label>초기 비밀번호 <span class="req">*</span> <span class="marker">3</span></label>
+          <div class="input-row">
+            <div class="input filled">Xk3!mfa92</div>
+            <button class="btn sm">자동 생성</button>
+          </div>
+          <p class="hint">8자 이상 · 영문·숫자·특수문자 중 2종류 이상 조합</p>
+        </div>
+        <div class="field">
+          <label>담당 업무 <span class="req">*</span> <span class="marker">4</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box"></span> 실측</span>
+            <span class="check"><span class="box"></span> 시공</span>
+          </div>
+          <p class="hint">둘 다 체크 가능 (겸임 기사)</p>
+        </div>
+        <div class="field">
+          <label>취급 가능 품목 <span class="req">*</span> <span class="marker">5</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box"></span> 냉장고장</span>
+            <span class="check"><span class="box"></span> 붙박이장</span>
+            <span class="check"><span class="box"></span> 신발장</span>
+            <span class="check"><span class="box"></span> 싱크대</span>
+          </div>
+          <p class="hint">여러 품목 선택 가능 · 1개 이상 · 주문 배정 시 후보 필터에 사용</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>추가 정보 (선택) <span class="marker">6</span></h3>
+      <div class="grid">
+        <div class="field">
+          <label>차종 <span class="opt">(선택)</span></label>
+          <div class="input">예: 포터(현대), 1톤 트럭 · 최대 50자</div>
+        </div>
+        <div class="field">
+          <label>차량번호 <span class="opt">(선택)</span></label>
+          <div class="input">예: 12가 3456 · 최대 20자</div>
+        </div>
+        <div class="field full">
+          <label>집주소 <span class="opt">(선택)</span></label>
+          <div class="input-row">
+            <div class="input readonly">주소 검색으로 자동 입력 (읽기 전용)</div>
+            <button class="btn sm">주소 검색</button>
+          </div>
+          <div class="input" style="margin-top:6px;">상세 주소 · 최대 100자</div>
+          <p class="hint">정산 안내·권역비 산정 등에 추후 활용</p>
+        </div>
+        <div class="field full">
+          <label>사업자등록증 이미지 <span class="opt">(선택)</span> <span class="marker">7</span></label>
+          <div class="upload">
+            <span>＋ 파일 추가</span>
+            <span style="font-size:11px;">JPG/PNG/HEIC/PDF · 최대 10MB · 1장</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn">취소</button>
+      <button class="btn primary">저장 <span class="marker" style="background:#fff;color:var(--ink);">8</span></button>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 2: 유효성 에러 ───────── -->
+<div class="case-label">케이스 2 — 유효성 에러 <small>필수 미입력·형식 오류·휴대전화번호 중복</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="page-head"><h2>기사 등록</h2></div>
+
+    <div class="section">
+      <h3>계정 정보 (필수)</h3>
+      <div class="grid">
+        <div class="field">
+          <label>이름 <span class="req">*</span></label>
+          <div class="input error"></div>
+          <span class="err-msg">이름을 입력해주세요.</span>
+        </div>
+        <div class="field">
+          <label>휴대전화번호 (아이디로 사용) <span class="req">*</span></label>
+          <div class="input error filled">010-2222-3333</div>
+          <span class="err-msg">이미 등록된 휴대전화번호입니다. <span class="marker">9</span></span>
+        </div>
+        <div class="field full">
+          <label>초기 비밀번호 <span class="req">*</span></label>
+          <div class="input-row">
+            <div class="input error filled">12345678</div>
+            <button class="btn sm">자동 생성</button>
+          </div>
+          <span class="err-msg">비밀번호는 8자 이상, 영문·숫자·특수문자 중 2종류 이상 조합으로 입력해주세요.</span>
+        </div>
+        <div class="field">
+          <label>담당 업무 <span class="req">*</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box err"></span> 실측</span>
+            <span class="check"><span class="box err"></span> 시공</span>
+          </div>
+          <span class="err-msg">담당 업무를 1개 이상 선택해주세요.</span>
+        </div>
+        <div class="field">
+          <label>취급 가능 품목 <span class="req">*</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box err"></span> 냉장고장</span>
+            <span class="check"><span class="box err"></span> 붙박이장</span>
+            <span class="check"><span class="box err"></span> 신발장</span>
+            <span class="check"><span class="box err"></span> 싱크대</span>
+          </div>
+          <span class="err-msg">취급 가능한 품목을 1개 이상 선택해주세요.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>추가 정보 (선택)</h3>
+      <div class="field full">
+        <label>사업자등록증 이미지 <span class="opt">(선택)</span></label>
+        <div class="upload" style="border-color: var(--error);">
+          <span>business_license.tiff</span>
+        </div>
+        <span class="err-msg">JPG/PNG/HEIC/PDF 형식만 업로드할 수 있습니다. <span class="marker">A</span></span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn">취소</button>
+      <button class="btn primary">저장</button>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 3: 취소 확인 모달 ───────── -->
+<div class="case-label">케이스 3 — 취소 확인 모달 <small>입력 내용이 있는 상태에서 [취소] 클릭</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>작성을 취소할까요? <span class="marker">B</span></h3>
+    <p>입력한 내용이 저장되지 않습니다. 기사 목록으로 돌아갑니다.</p>
+    <div class="modal-actions">
+      <button class="btn sm">계속 작성</button>
+      <button class="btn sm primary">취소하고 나가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 4: 저장 완료 ───────── -->
+<div class="case-label">케이스 4 — 저장 완료 <small>계정 생성 후 [A-3.1 기사 목록]으로 복귀 + 완료 토스트</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 18px 26px;">
+    <div class="toast ok">✓ 기사 계정이 등록되었습니다. <span class="marker" style="margin-left:auto;">C</span></div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 A-3.2 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: [A-3.1 기사 목록]의 [+ 새 기사 등록]. 완료 후 [A-3.1]로 복귀.</li>
+    <li><span class="marker">2</span> 휴대전화번호 = 로그인 아이디. 11자리 휴대폰, 자동 하이픈(010-XXXX-XXXX), 전체 시스템 중복 불가. 1차에는 기사 본인 변경 불가(관리자는 A-3.4 기사 수정에서 변경 가능).</li>
+    <li><span class="marker">3</span> 초기 비밀번호: 8자 이상·2종류 이상 조합. [자동 생성] 클릭 시 서버 규칙에 맞는 랜덤 비밀번호 생성 → 필드 채움 + 표시.</li>
+    <li><span class="marker">4</span> 담당 업무: 실측/시공 체크박스, 1개 이상. 둘 다 체크 = 겸임 기사.</li>
+    <li><span class="marker">5</span> 취급 가능 품목: 다품목 반영 — 냉장고장·붙박이장·신발장·싱크대 체크박스 그룹, 1개 이상 선택. 주문 배정 시 후보 필터에 사용. (수정 A-3.4와 동일 구성)</li>
+    <li><span class="marker">6</span> 선택 항목 4종: 차종(50자) / 차량번호(20자, 한글·숫자) / 집주소(카카오 주소 검색 + 상세 100자) / 사업자등록증 이미지.</li>
+    <li><span class="marker">7</span> 사업자등록증: JPG/PNG/HEIC/PDF, 최대 10MB, 1장. 정산 증빙·세금계산서 발행 등에 활용. A-3.3에서 조회·교체 가능.</li>
+    <li><span class="marker">8</span> [저장]: 필수 필드 유효 시 계정 생성 → [A-3.1]로 복귀, 완료 토스트.</li>
+    <li><span class="marker">9</span> 휴대전화번호 중복: "이미 등록된 휴대전화번호입니다."</li>
+    <li><span class="marker">A</span> 파일 에러: 용량 초과 "10MB 이하의 파일만 업로드할 수 있습니다." / 형식 오류 "JPG/PNG/HEIC/PDF 형식만 업로드할 수 있습니다."</li>
+    <li><span class="marker">B</span> [취소]: 입력 내용 있으면 확인 모달 후 복귀.</li>
+    <li><span class="marker">C</span> 완료 토스트 후 [A-3.1] 복귀.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>취급 가능 품목 4종(냉장고장·붙박이장·신발장·싱크대)은 다품목 반영. 품목 종류 목록 확정·회사별 가변 여부는 명세 동기화 필요(등록·수정·기사 목록 요약 동일 기준).</li>
+    <li>섹션 2분할("계정 정보(필수)" / "추가 정보(선택)")과 섹션명, 2단 그리드 배치는 명세에 그룹 정의가 없어 임의 구성 — 확정 필요.</li>
+    <li>완료 토스트 문구, 취소 모달 문구·버튼 라벨, 비밀번호 자동 생성 예시값은 임의 작성.</li>
+    <li>에러 메시지 표시 위치(각 필드 하단)는 명세 A-3.2에 명시가 없어 A-2.2 패턴을 따름.</li>
+    <li>샘플 데이터는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

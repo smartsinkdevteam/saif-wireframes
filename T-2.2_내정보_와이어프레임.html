@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-2.2 내 정보 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1240px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+
+  .stage { max-width: 1240px; margin: 0 auto; display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; }
+  .case-tag small { font-weight: 400; color: var(--ink-soft); font-size: 12px; margin-left: 6px; }
+
+  .phone { width: 360px; height: 720px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line-soft); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .p-header .back { font-size: 17px; color: var(--ink-soft); font-weight: 400; }
+  .p-body { flex: 1; overflow: hidden; padding: 16px 18px; }
+
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 12px; }
+  .toast.err { background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+
+  .sec-title { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 4px 0 8px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .field label { font-size: 11.5px; color: var(--ink-soft); }
+  .field label .opt { color: var(--ink-faint); font-size: 10.5px; }
+  .input { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; background: var(--surface); color: var(--ink); min-height: 42px; display: flex; align-items: center; }
+  .input.locked { background: var(--paper); color: var(--ink-faint); }
+  .input.placeholder { color: var(--ink-faint); }
+  .input.error { border-color: var(--error); }
+  .input-row { display: flex; gap: 6px; }
+  .input-row .input { flex: 1; }
+  .hint { font-size: 10.5px; color: var(--ink-faint); line-height: 1.6; }
+  .err-msg { font-size: 11px; color: var(--error); }
+  .btn-sm { font-size: 12px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); display: inline-flex; align-items: center; }
+
+  .doc-preview { border: 1px solid var(--line-soft); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+  .doc-preview .thumb { width: 44px; height: 44px; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--paper); display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ink-faint); }
+  .doc-preview .spacer { flex: 1; }
+
+  .p-footer { padding: 12px 18px 16px; border-top: 1px solid var(--line-soft); }
+  .p-btn { display: block; width: 100%; text-align: center; font-size: 14px; padding: 13px 0; border-radius: 10px; background: var(--ink); color: #fff; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+
+  .p-overlay { position: absolute; inset: 0; background: rgba(44,44,42,0.45); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .p-modal { background: var(--surface); border-radius: 14px; width: 100%; padding: 20px; }
+  .p-modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .p-modal p { font-size: 13px; line-height: 1.7; color: var(--ink-soft); }
+  .p-modal .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .p-modal .m-btn { flex: 1; text-align: center; font-size: 13.5px; padding: 11px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .p-modal .m-btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1240px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>T-2.2 내 정보 <small>기사 / 모바일 웹·PWA / 케이스 3종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- ───────── 케이스 1: 기본 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본 <small>값 등록된 상태</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 내 정보 <span class="marker">1</span></div>
+      <div class="p-body">
+        <div class="sec-title">조회 전용 <span class="marker">2</span></div>
+        <div class="field">
+          <label>이름</label>
+          <div class="input locked">김기사</div>
+        </div>
+        <div class="field">
+          <label>휴대전화번호</label>
+          <div class="input locked">010-2222-3333</div>
+          <p class="hint">이름·휴대전화번호는 본인 인증 도입 후 변경 가능. 변경이 필요하면 관리자에게 요청해주세요.</p>
+        </div>
+
+        <div class="sec-title" style="margin-top:14px;">편집 가능 (모두 선택) <span class="marker">3</span></div>
+        <div class="field">
+          <label>차종 <span class="opt">(선택)</span></label>
+          <div class="input">포터(현대)</div>
+        </div>
+        <div class="field">
+          <label>차량번호 <span class="opt">(선택)</span></label>
+          <div class="input">12가 3456</div>
+        </div>
+        <div class="field">
+          <label>집주소 <span class="opt">(선택)</span></label>
+          <div class="input-row">
+            <div class="input locked">인천 미추홀구 OO로 41</div>
+            <span class="btn-sm">주소 검색</span>
+          </div>
+          <div class="input" style="margin-top:5px;">102호</div>
+        </div>
+        <div class="field">
+          <label>사업자등록증 이미지 <span class="opt">(선택)</span> <span class="marker">4</span></label>
+          <div class="doc-preview">
+            <span class="thumb">📄</span> 사업자등록증.jpg <span class="spacer"></span><span class="btn-sm" style="padding:6px 12px;">교체</span>
+          </div>
+        </div>
+      </div>
+      <div class="p-footer"><span class="p-btn">저장 <span class="marker" style="background:#fff;color:var(--ink);">5</span></span></div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 2: 에러 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 에러 <small>변경 없음 저장 / 파일 형식 오류 / 미등록 표시</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 내 정보</div>
+      <div class="p-body">
+        <div class="toast err">⚠ 변경된 내용이 없습니다. <span class="marker" style="margin-left:auto;">6</span></div>
+        <div class="sec-title">조회 전용</div>
+        <div class="field">
+          <label>이름</label>
+          <div class="input locked">김기사</div>
+        </div>
+        <div class="field">
+          <label>휴대전화번호</label>
+          <div class="input locked">010-2222-3333</div>
+        </div>
+        <div class="sec-title" style="margin-top:14px;">편집 가능 (모두 선택)</div>
+        <div class="field">
+          <label>차종 <span class="opt">(선택)</span></label>
+          <div class="input placeholder">미등록 <span class="marker" style="margin-left:auto;">7</span></div>
+        </div>
+        <div class="field">
+          <label>차량번호 <span class="opt">(선택)</span></label>
+          <div class="input placeholder">미등록</div>
+        </div>
+        <div class="field">
+          <label>사업자등록증 이미지 <span class="opt">(선택)</span></label>
+          <div class="doc-preview" style="border-color: var(--error);">
+            <span class="thumb">📄</span> license.tiff <span class="spacer"></span><span class="btn-sm" style="padding:6px 12px;">교체</span>
+          </div>
+          <span class="err-msg">JPG/PNG/HEIC/PDF 형식만 업로드할 수 있습니다. <span class="marker">8</span></span>
+        </div>
+      </div>
+      <div class="p-footer"><span class="p-btn">저장</span></div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 3: 뒤로가기 확인 모달 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 뒤로가기 확인 <small>변경 사항 있는 상태에서 [← 뒤로]</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 내 정보</div>
+      <div class="p-body">
+        <div class="sec-title">조회 전용</div>
+        <div class="field"><label>이름</label><div class="input locked">김기사</div></div>
+        <div class="field"><label>휴대전화번호</label><div class="input locked">010-2222-3333</div></div>
+        <div class="sec-title" style="margin-top:14px;">편집 가능 (모두 선택)</div>
+        <div class="field"><label>차종 <span class="opt">(선택)</span></label><div class="input">1톤 트럭 (수정됨)</div></div>
+      </div>
+      <div class="p-footer"><span class="p-btn">저장</span></div>
+      <div class="p-overlay">
+        <div class="p-modal">
+          <h3>수정을 그만둘까요? <span class="marker">9</span></h3>
+          <p>변경한 내용이 저장되지 않습니다. 설정으로 돌아갑니다.</p>
+          <div class="actions">
+            <span class="m-btn">계속 수정</span>
+            <span class="m-btn primary">나가기</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-2.2 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: [T-2.1 설정] → [내 정보]. 헤더: 화면명 "내 정보" + 좌측 [← 뒤로].</li>
+    <li><span class="marker">2</span> 조회 전용 섹션: 이름·휴대전화번호 회색 처리 + 안내 문구(명세 그대로). 변경은 본인 인증 도입 후, 필요 시 관리자에게 요청.</li>
+    <li><span class="marker">3</span> 편집 가능 섹션: 차종(50자)·차량번호(20자, 한글·숫자)·집주소(카카오 주소 검색 + 상세 100자)·사업자등록증. 모두 선택 항목.</li>
+    <li><span class="marker">4</span> 사업자등록증: 기존 업로드본 미리보기 + [교체]. 새 파일 선택 시 기존 자동 대체. JPG/PNG/HEIC/PDF, 10MB, 1장.</li>
+    <li><span class="marker">5</span> [저장]: 변경 사항 있음 + 유효 시 → 본인 정보 업데이트, 완료 토스트, [T-2.1]로 복귀. 변경 즉시 [A-3.3 기사 상세]에도 반영.</li>
+    <li><span class="marker">6</span> 변경 사항 없이 [저장]: "변경된 내용이 없습니다."</li>
+    <li><span class="marker">7</span> 옵셔널 항목 미입력 허용, 미등록 시 "미등록" 표시.</li>
+    <li><span class="marker">8</span> 파일 에러: 형식 "JPG/PNG/HEIC/PDF 형식만 업로드할 수 있습니다." / 용량 "10MB 이하의 파일만 업로드할 수 있습니다." / 저장 실패 "저장에 실패했습니다. 잠시 후 다시 시도해주세요."</li>
+    <li><span class="marker">9</span> [← 뒤로]: 변경 사항 있으면 확인 모달 표시 후 [T-2.1]로 복귀.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>뒤로가기 확인 모달의 문구·버튼 라벨, 저장 완료 토스트 문구는 명세에 정의 없음 — 임의 작성, 확정 필요.</li>
+    <li>"미등록"을 입력 필드의 플레이스홀더 형태로 표현 — 표시 방식(텍스트만 vs 필드 내)은 명세에 정의 없음.</li>
+    <li>저장 버튼의 하단 고정 배치, 섹션 구분 스타일은 임의 표현. 샘플 데이터는 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

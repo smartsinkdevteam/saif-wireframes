@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-0.4 비밀번호 변경 (모달) — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+    --ok: #1d7a4f; --ok-bg: #e3f4ec;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1640px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .stage { max-width: 1640px; margin: 0 auto; display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .frame-col { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .case-tag { font-size: 13px; font-weight: 700; text-align: center; max-width: 420px; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+  .desktop { width: 700px; max-width: 100%; height: 600px; background: #d9d7d0; border: 1px solid var(--line); border-radius: 14px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .phone { width: 360px; height: 720px; background: #d9d7d0; border: 1px solid var(--line); border-radius: 24px; display: flex; align-items: center; justify-content: center; padding: 18px; position: relative; }
+  .modal { width: 400px; max-width: 100%; background: var(--surface); border-radius: 16px; padding: 24px 24px 20px; box-shadow: 0 12px 36px rgba(0,0,0,0.18); }
+  .modal h4 { font-size: 16px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; }
+  .modal h4 .x { margin-left: auto; color: var(--ink-faint); font-weight: 400; font-size: 15px; }
+  .f-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; display: block; }
+  .f-box { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); padding: 11px 12px; margin-bottom: 14px; }
+  .f-box .ph { font-size: 12.5px; color: var(--ink-faint); flex: 1; }
+  .f-box .val { font-size: 13px; color: var(--ink); flex: 1; }
+  .f-box .ico { font-size: 13px; color: var(--ink-faint); margin-left: 8px; }
+  .f-box.err { border-color: var(--error); background: #fff7f7; margin-bottom: 4px; }
+  .field-err { font-size: 11px; color: var(--error); margin: 0 0 12px 2px; line-height: 1.5; }
+  .pw-guide { display: flex; gap: 10px; font-size: 10.5px; margin: -8px 2px 14px; }
+  .pw-guide .g { color: var(--ink-faint); }
+  .pw-guide .g.ok { color: var(--ok); font-weight: 600; }
+  .force-band { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; border-radius: 10px; padding: 9px 12px; font-size: 11.5px; line-height: 1.6; margin-bottom: 16px; }
+  .btns { display: flex; gap: 8px; margin-top: 6px; }
+  .btns span { flex: 1; text-align: center; font-size: 13px; padding: 12px 0; border-radius: 10px; font-weight: 600; }
+  .btns .ghost { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--line); }
+  .btns .ghost.dim { opacity: 0.35; }
+  .btns .primary { background: var(--ink); color: #fff; }
+  .btns .primary.dim { opacity: 0.35; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 9px; padding: 10px 13px; font-size: 12px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+  .toast.ok { background: var(--ok-bg); color: var(--ok); border-color: #bfe3d0; }
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1640px; margin: 36px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>S-0.4 비밀번호 변경 (모달) <small>모든 사용자 / 일반·강제 변경 2흐름 / 케이스 4종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 일반 흐름 (관리자) -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 1 — 일반 흐름 (관리자, 데스크톱)<small>프로필 드롭다운 → [비밀번호 변경] · 복잡도 가이드 표시</small></div>
+    <div class="desktop">
+      <div class="modal">
+        <h4>비밀번호 변경 <span class="x">✕</span></h4>
+        <span class="f-label">현재 비밀번호</span>
+        <div class="f-box"><span class="val">••••••••</span><span class="ico">👁</span></div>
+        <span class="f-label">새 비밀번호 <span class="marker">1</span></span>
+        <div class="f-box"><span class="val">•••••••••••</span><span class="ico">👁</span></div>
+        <div class="pw-guide"><span class="g ok">✓ 8자 이상</span><span class="g ok">✓ 영문</span><span class="g ok">✓ 숫자</span><span class="g">○ 특수문자</span> <span class="marker">2</span></div>
+        <span class="f-label">새 비밀번호 확인</span>
+        <div class="f-box"><span class="val">•••••••••••</span><span class="ico">👁</span></div>
+        <div class="btns">
+          <span class="ghost">취소 <span class="marker" style="background:var(--paper);color:var(--ink);">3</span></span>
+          <span class="primary">저장 <span class="marker" style="background:#fff;color:var(--ink);">4</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 강제 변경 흐름 (기사) -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 2 — 강제 변경 흐름 (기사, 모바일)<small>임시 비밀번호 로그인 시 자동 열림 · 현재 비밀번호 숨김 · [취소] 비활성</small></div>
+    <div class="phone">
+      <div class="modal">
+        <h4>새 비밀번호 설정 <span class="marker">5</span></h4>
+        <div class="force-band">⚠ 임시 비밀번호로 로그인했습니다. 계속하려면 새 비밀번호를 설정해주세요. <span class="marker">6</span></div>
+        <span class="f-label">새 비밀번호 <span class="marker">7</span></span>
+        <div class="f-box"><span class="ph">8자 이상, 2종류 이상 조합</span><span class="ico">👁</span></div>
+        <div class="pw-guide"><span class="g">○ 8자 이상</span><span class="g">○ 영문</span><span class="g">○ 숫자</span><span class="g">○ 특수문자</span></div>
+        <span class="f-label">새 비밀번호 확인</span>
+        <div class="f-box"><span class="ph">새 비밀번호를 한 번 더 입력</span><span class="ico">👁</span></div>
+        <div class="btns">
+          <span class="ghost dim">취소 <span class="marker" style="background:var(--paper);color:var(--ink);">8</span></span>
+          <span class="primary dim">저장</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 유효성 에러 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 3 — 유효성 에러<small>필드별 에러 문구 (명세 그대로)</small></div>
+    <div class="desktop" style="height:640px;">
+      <div class="modal">
+        <h4>비밀번호 변경 <span class="x">✕</span></h4>
+        <span class="f-label">현재 비밀번호</span>
+        <div class="f-box err"><span class="val">••••••••</span><span class="ico">👁</span></div>
+        <p class="field-err">현재 비밀번호가 올바르지 않습니다. <span class="marker">9</span></p>
+        <span class="f-label">새 비밀번호</span>
+        <div class="f-box err"><span class="val">••••</span><span class="ico">👁</span></div>
+        <p class="field-err">영문·숫자·특수문자 중 2종류 이상을 조합해 8자 이상으로 입력해주세요.<br>현재 비밀번호와 다른 비밀번호를 입력해주세요. <span class="marker">A</span></p>
+        <span class="f-label">새 비밀번호 확인</span>
+        <div class="f-box err"><span class="val">••••••</span><span class="ico">👁</span></div>
+        <p class="field-err">두 비밀번호가 일치하지 않습니다. <span class="marker">B</span></p>
+        <div class="btns">
+          <span class="ghost">취소</span>
+          <span class="primary dim">저장</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 결과 토스트 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 4 — 결과 표시<small>성공 · 서버 오류 토스트</small></div>
+    <div class="desktop" style="height:200px; background:#efeee9;">
+      <div style="display:flex; flex-direction:column; gap:10px; width:420px;">
+        <div class="toast ok">✓ 비밀번호가 변경되었습니다. <span class="marker" style="margin-left:auto;">C</span></div>
+        <div class="toast">⚠ 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 S-0.4 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 새 비밀번호: 필수, 최소 8자·최대 100자, 영문·숫자·특수문자 중 2종류 이상 조합, 현재 비밀번호와 동일 불가.</li>
+    <li><span class="marker">2</span> 입력 중 실시간 복잡도 가이드 표시 — 명세 그대로(체크 형태 표현은 임의).</li>
+    <li><span class="marker">3</span> [취소]: 일반 흐름에서는 항상 활성 → 모달 닫기.</li>
+    <li><span class="marker">4</span> [저장]: 3개 필드 모두 입력 시 활성 → 서버 검증 → 성공 시 "비밀번호가 변경되었습니다." 표시 후 모달 닫힘.</li>
+    <li><span class="marker">5</span> 진입 경로 3종: 관리자 프로필 드롭다운 → [비밀번호 변경] / 기사 설정 탭([T-2.1]) → [비밀번호 변경] / 임시 비밀번호 로그인 시 자동 열림(강제 변경). 관리자가 [A-3.3]에서 기사 비밀번호를 재설정한 경우에도 해당 기사 다음 로그인 시 자동 열림.</li>
+    <li><span class="marker">6</span> 강제 변경 안내 배너 — 흐름은 명세 그대로, 문구는 임의.</li>
+    <li><span class="marker">7</span> 강제 변경 흐름에서는 이미 임시 비밀번호로 인증을 마친 상태이므로 "현재 비밀번호" 필드를 숨기고 검증 생략 — 명세 그대로.</li>
+    <li><span class="marker">8</span> 강제 변경 흐름에서 [취소] 비활성(변경 완료 전에는 닫을 수 없음). 변경 완료 시 원래 이동하려던 화면(관리자=[A-1.1 대시보드], 기사=[T-1.1 작업 목록])으로 이동 — 명세 그대로.</li>
+    <li><span class="marker">9</span> "현재 비밀번호가 올바르지 않습니다." — 명세 문구 그대로.</li>
+    <li><span class="marker">A</span> "영문·숫자·특수문자 중 2종류 이상을 조합해 8자 이상으로 입력해주세요." / "현재 비밀번호와 다른 비밀번호를 입력해주세요." — 명세 문구 그대로(두 에러는 상황별 1개씩 노출, 표현 모음).</li>
+    <li><span class="marker">B</span> "두 비밀번호가 일치하지 않습니다." — 명세 문구 그대로.</li>
+    <li><span class="marker">C</span> 성공 "비밀번호가 변경되었습니다." / 서버 오류 "일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요." — 명세 문구 그대로.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>강제 변경 모달의 제목 "새 비밀번호 설정"과 경고 배너 문구는 임의 — S-0.3 안내문("새 비밀번호 설정 화면")과 톤을 맞춘 것, 확정 필요.</li>
+    <li>복잡도 가이드의 체크리스트(8자/영문/숫자/특수문자) 형태, placeholder, 눈 아이콘 토글 위치는 임의(눈 토글 자체는 S-0.1·S-0.2 패턴 준용).</li>
+    <li>케이스 3은 에러 문구 모음용으로 한 화면에 모두 표시 — 실제로는 상황별 해당 에러만 노출.</li>
+    <li>강제 변경 흐름 모달에 ✕ 닫기 아이콘 제거(닫기 불가 표현)는 임의 해석.</li>
+  </ol>
+</div>
+
+</body>
+</html>

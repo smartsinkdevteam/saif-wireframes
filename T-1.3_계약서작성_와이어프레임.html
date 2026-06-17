@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.3 계약서 작성 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+    --ok: #1d7a4f; --ok-bg: #e3f4ec;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1640px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+
+  .stage { max-width: 1640px; margin: 0 auto; display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; max-width: 360px; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+
+  .phone { width: 360px; height: 780px; background: #f3f2ee; border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 10px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  .order-chip { background: var(--surface); border-radius: 12px; padding: 10px 12px; font-size: 11.5px; color: var(--ink-soft); }
+  .order-chip b { color: var(--ink); font-weight: 600; }
+
+  .card { background: var(--surface); border-radius: 14px; padding: 12px 14px; }
+  .card h6 { font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .card h6 .req { color: var(--error); }
+  .card h6 .opt { font-weight: 400; }
+
+  /* 견적 행 */
+  .quote-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .quote-row + .quote-row { border-top: 1px dashed var(--line-soft); }
+  .quote-row .item { font-size: 12.5px; font-weight: 600; flex: 0 0 76px; }
+  .quote-row .item small { display: block; font-size: 9px; font-weight: 400; color: var(--ink-faint); }
+  .amt-box { flex: 1; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); padding: 10px 11px; font-size: 15px; font-weight: 700; text-align: right; }
+  .amt-box.empty { color: var(--ink-faint); font-weight: 400; font-size: 12px; }
+  .amt-box.err { border-color: var(--error); background: #fff7f7; color: var(--error); }
+  .quote-row .won { font-size: 11px; color: var(--ink-faint); flex-shrink: 0; }
+  .field-err { font-size: 10.5px; color: var(--error); padding: 1px 0 2px 84px; }
+  .sum-row { display: flex; align-items: center; border-top: 1.5px solid var(--ink); margin-top: 6px; padding-top: 9px; font-size: 13px; font-weight: 700; }
+  .sum-row .v { margin-left: auto; font-size: 16px; }
+  .meta-row { display: flex; font-size: 10.5px; color: var(--ink-faint); padding-top: 6px; }
+  .meta-row .v { margin-left: auto; color: var(--ink-soft); }
+
+  /* 서명 캔버스 */
+  .sign-box { border: 1.5px dashed var(--line); border-radius: 12px; background: var(--paper); height: 92px; display: flex; align-items: center; justify-content: center; position: relative; }
+  .sign-box.signed { border-style: solid; background: #fff; }
+  .sign-box .hint { font-size: 11px; color: var(--ink-faint); }
+  .sign-box svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sign-foot { display: flex; align-items: center; margin-top: 6px; }
+  .sign-foot .who { font-size: 10.5px; color: var(--ink-faint); }
+  .sign-foot .redo { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--accent); }
+
+  .status-band { border-radius: 11px; padding: 8px 12px; font-size: 11px; line-height: 1.6; }
+  .status-band.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; }
+  .status-band.ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #bfe3d0; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+
+  .p-footer { padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; background: var(--surface); }
+  .p-btn { flex: 1; text-align: center; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+  .p-btn.dim { opacity: 0.35; }
+
+  /* 모달 */
+  .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+  .modal { background: var(--surface); border-radius: 16px; padding: 20px 18px 16px; width: 100%; }
+  .modal h5 { font-size: 14.5px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+  .modal .btns { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .btns span { flex: 1; text-align: center; font-size: 12.5px; padding: 11px 0; border-radius: 10px; font-weight: 600; }
+  .modal .btns .ghost { background: var(--paper); color: var(--ink-soft); }
+  .modal .btns .primary { background: var(--accent); color: #fff; }
+  .spinner-line { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
+  .spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; flex-shrink: 0; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1640px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 다품목 견적 행 반영</div>
+  <h1>T-1.3 계약서 작성 <small>실측 기사 / 모바일 웹·PWA / 위저드 외부 별개 화면 / 케이스 5종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 (작성 중) — 다품목 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본 (작성 중)<small>여러 종류 품목 행 자동 구성 · 종류별 금액 입력 · 기사 서명 완료 · 고객 서명 대기</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 계약서 작성</div>
+      <div class="p-body">
+        <div class="order-chip">🏠 <b>김민지</b> · 인천 연수구 송도동 12-3 송도더샵 101동 1203호 <span class="marker">1</span></div>
+        <div class="card">
+          <h6>견적 <span class="marker">2</span></h6>
+          <div class="quote-row">
+            <span class="item">냉장고장<small>품목명 · 읽기 전용</small></span>
+            <span class="amt-box">3,200,000</span>
+            <span class="won">원</span>
+          </div>
+          <div class="quote-row">
+            <span class="item">붙박이장<small>품목명 · 읽기 전용</small></span>
+            <span class="amt-box">1,250,000</span>
+            <span class="won">원</span>
+          </div>
+          <div class="quote-row">
+            <span class="item">신발장<small>품목명 · 읽기 전용</small></span>
+            <span class="amt-box">600,000</span>
+            <span class="won">원</span>
+          </div>
+          <div class="sum-row">합계 <span class="v">5,050,000원 <span class="marker">3</span></span></div>
+          <div class="meta-row">작성일 (자동) <span class="v">2026-06-12 <span class="marker">4</span></span></div>
+        </div>
+        <div class="card">
+          <h6>기사 서명 <span class="req">*</span> <span class="marker">5</span></h6>
+          <div class="sign-box signed">
+            <svg viewBox="0 0 300 90"><path d="M40,60 C60,20 75,75 95,45 S130,25 150,55 C165,75 185,30 210,50 S250,40 265,55" fill="none" stroke="#2c2c2a" stroke-width="2.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="sign-foot"><span class="who">실측 기사 · 김기사</span><span class="redo">다시 그리기 <span class="marker">6</span></span></div>
+        </div>
+        <div class="card">
+          <h6>고객 서명 <span class="opt">(선택)</span> <span class="marker">7</span></h6>
+          <div class="sign-box"><span class="hint">고객님이 손으로 직접 서명하는 영역입니다</span></div>
+          <div class="sign-foot"><span class="who">고객 · 김민지</span><span class="redo">다시 그리기</span></div>
+        </div>
+        <div class="status-band warn">ℹ 고객 서명 없이 작성 완료하면 계약이 <b>보류</b>로 저장됩니다. 고객 서명까지 받으면 <b>확정</b>됩니다. <span class="marker">8</span></div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">취소 <span class="marker" style="background:var(--paper);color:var(--ink);">9</span></span>
+        <span class="p-btn">작성 완료 <span class="marker" style="background:#fff;color:var(--ink);">A</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 확정 완료 확인 모달 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 작성 완료 (확정)<small>고객 서명 있음 → 확인 모달 → PDF 생성 → 주문 상세 복귀</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 계약서 작성</div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="card">
+          <h6>견적</h6>
+          <div class="quote-row"><span class="item">냉장고장</span><span class="amt-box">3,200,000</span><span class="won">원</span></div>
+          <div class="quote-row"><span class="item">붙박이장</span><span class="amt-box">1,250,000</span><span class="won">원</span></div>
+          <div class="sum-row">합계 <span class="v">4,450,000원</span></div>
+        </div>
+        <div class="card"><h6>기사 서명 *</h6><div class="sign-box signed"><svg viewBox="0 0 300 90"><path d="M40,60 C60,20 75,75 95,45 S130,25 150,55" fill="none" stroke="#2c2c2a" stroke-width="2.5"/></svg></div></div>
+        <div class="card"><h6>고객 서명</h6><div class="sign-box signed"><svg viewBox="0 0 300 90"><path d="M50,50 C80,15 100,80 130,40 S180,30 200,60 C215,75 235,35 255,50" fill="none" stroke="#2c2c2a" stroke-width="2.5"/></svg></div></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal">
+          <h5>계약서를 작성 완료하시겠습니까? <span class="marker">B</span></h5>
+          <p>고객 서명이 포함되어 계약이 <b>확정</b>으로 저장됩니다. 완료 후 계약서 파일(PDF/이미지)이 자동 생성되며, 기사 휴대폰에 저장·다운로드할 수 있습니다.</p>
+          <div class="spinner-line"><span class="spin"></span> 확인 시 계약서 생성 중 로딩 표시 → 완료 후 [T-1.1.1 주문 상세] 복귀 <span class="marker">C</span></div>
+          <div class="btns"><span class="ghost">취소</span><span class="primary">작성 완료</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 보류 저장 확인 모달 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 작성 완료 (보류)<small>고객 서명 없음 → 보류 안내 확인 모달</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 계약서 작성</div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="card">
+          <h6>견적</h6>
+          <div class="quote-row"><span class="item">냉장고장</span><span class="amt-box">3,200,000</span><span class="won">원</span></div>
+          <div class="quote-row"><span class="item">붙박이장</span><span class="amt-box">1,250,000</span><span class="won">원</span></div>
+          <div class="sum-row">합계 <span class="v">4,450,000원</span></div>
+        </div>
+        <div class="card"><h6>기사 서명 *</h6><div class="sign-box signed"><svg viewBox="0 0 300 90"><path d="M40,60 C60,20 75,75 95,45 S130,25 150,55" fill="none" stroke="#2c2c2a" stroke-width="2.5"/></svg></div></div>
+        <div class="card"><h6>고객 서명 (선택)</h6><div class="sign-box"><span class="hint">서명 없음</span></div></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal">
+          <h5>고객 서명 없이 완료하시겠습니까? <span class="marker">D</span></h5>
+          <p>고객 서명이 없어 계약이 <b>보류</b>(미완료)로 저장됩니다. 이후 이 화면에 다시 들어와 고객 서명까지 받고 [작성 완료]하면 <b>확정</b>됩니다.<br><br>계약이 확정되기 전까지 [실측 완료]는 비활성 상태로 유지됩니다.</p>
+          <div class="btns"><span class="ghost">돌아가기</span><span class="primary">보류로 저장</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 보류 재진입 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 4 — 보류 재진입<small>금액·기사 서명 유지, 고객 서명만 받아 확정</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 계약서 작성</div>
+      <div class="p-body">
+        <div class="status-band warn">⏸ 보류 상태의 계약서입니다. 고객 서명을 받아 [작성 완료]하면 확정됩니다. <span class="marker">E</span></div>
+        <div class="card">
+          <h6>견적</h6>
+          <div class="quote-row"><span class="item">냉장고장</span><span class="amt-box">3,200,000</span><span class="won">원</span></div>
+          <div class="quote-row"><span class="item">붙박이장</span><span class="amt-box">1,250,000</span><span class="won">원</span></div>
+          <div class="sum-row">합계 <span class="v">4,450,000원</span></div>
+          <div class="meta-row">작성일 (자동) <span class="v">2026-06-12</span></div>
+        </div>
+        <div class="card">
+          <h6>기사 서명 <span class="req">*</span></h6>
+          <div class="sign-box signed"><svg viewBox="0 0 300 90"><path d="M40,60 C60,20 75,75 95,45 S130,25 150,55 C165,75 185,30 210,50" fill="none" stroke="#2c2c2a" stroke-width="2.5"/></svg></div>
+          <div class="sign-foot"><span class="who">실측 기사 · 김기사</span><span class="redo">다시 그리기</span></div>
+        </div>
+        <div class="card">
+          <h6>고객 서명 <span class="opt">(선택)</span></h6>
+          <div class="sign-box signed"><svg viewBox="0 0 300 90"><path d="M50,50 C80,15 100,80 130,40 S180,30 200,60 C215,75 235,35 255,50" fill="none" stroke="#2c2c2a" stroke-width="2.5"/></svg><span class="marker" style="position:absolute; top:4px; right:4px;">F</span></div>
+          <div class="sign-foot"><span class="who">고객 · 김민지</span><span class="redo">다시 그리기</span></div>
+        </div>
+        <div class="status-band ok">✓ 고객 서명이 입력되었습니다. 작성 완료 시 계약이 <b>확정</b>됩니다.</div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">취소</span>
+        <span class="p-btn">작성 완료</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 5: 유효성 에러 — 다품목 중 일부 미입력 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 5 — 유효성 · 에러<small>여러 품목 중 일부 금액 미입력 + 비활성 버튼 + 토스트 3종</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-header"><span class="back">←</span> 계약서 작성</div>
+      <div class="p-body" style="gap:8px;">
+        <div class="card">
+          <h6>견적</h6>
+          <div class="quote-row">
+            <span class="item">냉장고장</span>
+            <span class="amt-box">3,200,000</span>
+            <span class="won">원</span>
+          </div>
+          <div class="quote-row">
+            <span class="item">붙박이장</span>
+            <span class="amt-box empty err">금액 미입력</span>
+            <span class="won">원</span>
+          </div>
+          <div class="field-err">금액을 0 이상으로 입력해주세요. <span class="marker">G</span></div>
+          <div class="sum-row">합계 <span class="v">3,200,000원</span></div>
+        </div>
+        <div class="card">
+          <h6>기사 서명 <span class="req">*</span></h6>
+          <div class="sign-box"><span class="hint">서명 없음</span></div>
+        </div>
+        <div class="toast">⚠ 모든 품목의 금액을 입력해주세요. <span class="marker" style="margin-left:auto;">H</span></div>
+        <div class="toast">⚠ 기사 서명을 입력해주세요.</div>
+        <div class="toast">⚠ 계약서 생성에 실패했습니다. 잠시 후 다시 시도해주세요.</div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">취소</span>
+        <span class="p-btn dim">작성 완료 <span class="marker" style="background:#fff;color:var(--ink);">I</span></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.3 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: [T-1.1.1 주문 상세]의 [계약서 작성] 액션(모든 품목 측정완료 후 활성). 위저드 외부 별개 화면.</li>
+    <li><span class="marker">2</span> <b>견적 행(다품목 반영)</b>: 주문의 시공범위 품목이 <b>한 행씩 자동 구성 — 여러 종류면 종류별 행</b>(실측 시점 확정 품목 기준 = 주문 등록 시공범위 + 현장 추가·취소 반영). 품목명 읽기 전용, 행 직접 추가·삭제 불가. 기사는 <b>품목별 금액만</b> 입력(0 이상 정수, 천 단위 구분자, 품목당 최대 1억원). 모델은 인스턴스당 1행(order_item 기준).</li>
+    <li><span class="marker">3</span> 합계: 전 품목 금액 자동 합산(읽기 전용).</li>
+    <li><span class="marker">4</span> 작성일: 계약서 작성(오늘) 날짜 자동 기록(읽기 전용).</li>
+    <li><span class="marker">5</span> 기사 서명: 휴대폰 화면에 손으로 직접 그리는 서명 캔버스(별도 외부 라이브러리 없이 화면 내 캔버스). 필수.</li>
+    <li><span class="marker">6</span> [다시 그리기]: 서명 캔버스 초기화 후 재입력 — 기사·고객 서명 캔버스 모두 동일 제공.</li>
+    <li><span class="marker">7</span> 고객 서명: 동일한 서명 캔버스, 선택 입력. 받는 즉시 입력.</li>
+    <li><span class="marker">8</span> 고객 서명이 비어 있으면 [작성 완료] 시 계약 "보류"(미완료), 있으면 "확정" — 명세 그대로(안내 문구는 임의).</li>
+    <li><span class="marker">9</span> [취소]: 작성 중 상태 유지하고 [T-1.1.1 주문 상세]로 복귀.</li>
+    <li><span class="marker">A</span> [작성 완료] 활성 조건: 모든 품목 금액 입력 + 기사 서명 완료(고객 서명 없어도 활성). 확정 시 착수금 수령 처리로 결제 상태 "착수금 대기"→"잔금 대기" 전이.</li>
+    <li><span class="marker">B</span> 확인 모달 → 확인 시 계약서 PDF/이미지 자동 생성 → [T-1.1.1] 복귀. 확정본은 기사 휴대폰에 jpg/pdf 저장·다운로드 가능. 계약서에는 품목별 금액·기사/고객 서명·착수금 입금 내역이 포함.</li>
+    <li><span class="marker">C</span> PDF 생성 대기 중 로딩 표시(생성 실패 시 에러 토스트 — 케이스 5).</li>
+    <li><span class="marker">D</span> 고객 서명 없이 완료 → 보류 저장. [실측 완료]는 계약 "확정"이어야 활성(보류면 비활성) — 명세 비고 그대로.</li>
+    <li><span class="marker">E</span> 보류 재진입: 입력값(금액·기사 서명) 유지된 채 열림 → 고객 서명 받고 재[작성 완료] 시 확정.</li>
+    <li><span class="marker">F</span> 확정 후 현장에서 품목 추가·취소 시 확정 자동 무효화 → [계약서 작성] 재활성·재작성(6/5 결정, T-1.1.1에서 처리).</li>
+    <li><span class="marker">G</span> 금액 미입력·음수: "금액을 0 이상으로 입력해주세요." — 명세 문구 그대로(필드 하단). 여러 품목 중 빈 행만 에러 표시.</li>
+    <li><span class="marker">H</span> 토스트: "모든 품목의 금액을 입력해주세요." / "기사 서명을 입력해주세요." / "계약서 생성에 실패했습니다. 잠시 후 다시 시도해주세요." — 명세 문구 그대로.</li>
+    <li><span class="marker">I</span> 활성 조건 미충족 시 [작성 완료] 비활성(시각적 dim).</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>1차도 한 주문에 여러 종류 품목을 받을 수 있어(같은 종류 1개씩) 케이스 1·5의 다품목 행(냉장고장·붙박이장·신발장)은 실제 1차 동작에 해당. 같은 종류 여러 개·별칭은 추후(데이터 모델만 선반영).</li>
+    <li>상단 고객·주소 요약 칩 — 명세에 없으나 계약 대상 확인용으로 배치(제외 가능).</li>
+    <li>보류/확정 안내 배너(케이스 1·4)와 모달 문구 일체 — 동작은 명세 기준, 문구는 임의(확정 필요).</li>
+    <li>서명 푸터의 "실측 기사 · OOO / 고객 · OOO" 표기, 금액 placeholder("금액 미입력")는 임의.</li>
+    <li>비활성 [작성 완료] + 토스트 병행 표시 방식(버튼 비활성 vs 탭 시 토스트)은 명세 미정의 — 둘 다 표현, 확정 필요.</li>
+    <li>[다시 그리기]는 기사·고객 서명 모두 제공 — 명세 표에는 기사 서명에만 명시되어 있어 동기화 필요(06-12 결정).</li>
+  </ol>
+</div>
+
+</body>
+</html>

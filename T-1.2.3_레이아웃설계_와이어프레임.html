@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.2.3 레이아웃 설계 (실측 위저드 3단계) — 와이어프레임 v12</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+    --fr-bg: #dbeafe; --fr-bd: #93c5fd; --fr-tx: #1d4ed8;
+    --fru-bg: #eff6ff; --fru-bd: #bfdbfe;
+    --frc-bg: #bae6fd;
+    --cab-bg: #d1fae5; --cab-bd: #6ee7b7; --cab-tx: #065f46;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1640px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+
+  .stage { max-width: 1640px; margin: 0 auto; display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; max-width: 360px; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+
+  .phone { width: 360px; height: 780px; background: #f3f2ee; border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 8px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; background: var(--surface); }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-header .item-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 3px 10px; }
+  .stepper { display: flex; align-items: center; justify-content: center; padding: 6px 30px 10px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 70px; }
+  .step .dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--ink-faint); background: var(--surface); }
+  .step.done .dot { border-color: var(--accent); color: var(--accent); }
+  .step.cur .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step .lb { font-size: 9.5px; color: var(--ink-faint); }
+  .step.cur .lb { color: var(--accent); font-weight: 700; }
+  .step-line { flex: 1; height: 1.5px; background: var(--line-soft); margin-bottom: 13px; max-width: 36px; }
+
+  .p-body { flex: 1; overflow: hidden; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+  .canvas-card { background: var(--surface); border-radius: 14px; padding: 12px 10px 6px; flex: 1; display: flex; flex-direction: column; }
+  .view-tabs { display: flex; gap: 4px; background: #f1f0ea; border-radius: 9px; padding: 3px; margin-bottom: 8px; }
+  .view-tab { flex: 1; text-align: center; font-size: 11.5px; font-weight: 600; padding: 6px 0; border-radius: 7px; color: var(--ink-soft); }
+  .view-tab.on { background: #fff; color: var(--accent); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .side-view { flex: 1; background: #e9e7e0; padding: 10px; display: flex; align-items: stretch; gap: 8px; position: relative; }
+  .side-depth { flex: 1; display: flex; flex-direction: column; position: relative; }
+  .side-cell { border: 1.5px solid var(--cab-bd); background: var(--cab-bg); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .side-cell .d { position: absolute; right: 4px; bottom: 3px; font-size: 8px; font-weight: 400; color: #34a384; }
+  .side-cell.fridge { background: var(--fr-bg); border-color: var(--fr-bd); color: var(--fr-tx); }
+  .side-cell.robot { background: repeating-linear-gradient(45deg,#f1f0ea,#f1f0ea 3px,#fff 3px,#fff 6px); border-style: dashed; color: var(--ink-faint); }
+  .side-cell.open-l { border-left: 2.5px dashed var(--warn); }
+  .side-cell.open-r { border-right: 2.5px dashed var(--warn); }
+  .side-cell.trim { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+  .side-cell.trim.tl { border-left: 3px dashed var(--warn); }
+  .side-cell.trim.tr { border-right: 3px dashed var(--warn); }
+  .trim-badge { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; color: #fff; background: var(--warn); border-radius: 99px; padding: 1px 6px; white-space: nowrap; }
+  .trim-arrow { position: absolute; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--warn); font-weight: 700; }
+  .trim-arrow.l { left: -3px; }
+  .trim-arrow.r { right: -3px; }
+  .trim-open { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); font-size: 7.5px; color: var(--warn); white-space: nowrap; }
+  .side-axis { width: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; color: #64748b; writing-mode: vertical-rl; }
+  .side-floorgap { height: 14px; border-top: 1.5px dashed var(--warn); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--warn); }
+  .side-legend { font-size: 9.5px; color: var(--ink-faint); padding: 6px 2px 2px; line-height: 1.5; }
+  .side-legend .tr-mk { color: var(--warn); font-weight: 700; }
+  .side-stack { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .srow { flex: 1; display: flex; align-items: stretch; position: relative; min-height: 22px; }
+  .s-front { width: 9px; flex-shrink: 0; background: #cfe6f7; border: 1.5px solid var(--fr-bd); position: relative; }
+  .s-front .s-chan { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--warn-bg); border-bottom: 1.5px dashed var(--warn); }
+  .s-body { flex: 1; background: var(--cab-bg); border: 1.5px solid var(--cab-bd); border-left: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .s-body .dep { font-size: 8px; font-weight: 400; color: #34a384; }
+  .srow.open .s-body { background: repeating-linear-gradient(45deg, #eef7f1, #eef7f1 3px, #fff 3px, #fff 6px); border-style: dashed; color: #5f8a76; }
+  .srow.trim .s-body { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); border-left: 2.5px dashed var(--warn); }
+  .s-outlet { position: absolute; right: -1px; top: 50%; transform: translateY(-50%); width: 6px; height: 38%; background: repeating-linear-gradient(45deg, #94a3b8, #94a3b8 2px, #fff 2px, #fff 4px); border: 1px solid #94a3b8; }
+  .srow.robot .s-front { align-self: flex-start; height: calc(100% - 11px); }
+  .srow.robot .s-liftgap { position: absolute; left: 0; width: 9px; bottom: 0; height: 11px; border-top: 1.5px dashed var(--warn); background: rgba(133,79,11,0.08); }
+  .srow.robot .s-liftlabel { position: absolute; left: 12px; bottom: 2px; font-size: 7px; color: var(--warn); z-index: 2; }
+  .side-cap { font-size: 8px; color: #64748b; text-align: center; padding-top: 4px; }
+  .side-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
+  .side-seg { display: flex; gap: 3px; background: #f1f0ea; border-radius: 8px; padding: 3px; }
+  .side-seg .s { font-size: 11px; font-weight: 600; padding: 5px 14px; border-radius: 6px; color: var(--ink-soft); }
+  .side-seg .s.on { background: #fff; color: var(--accent); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .cab-outline { flex: 1; background: #e9e7e0; padding: 4px; display: flex; position: relative; }
+  .colm { display: flex; flex-direction: column; position: relative; }
+  .fr-upper { background: var(--cab-bg); border: 1.5px solid var(--cab-bd); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .fr-upper.sel { border: 2.5px solid var(--accent); }
+  .fr-upper .sz { font-size: 8.5px; font-weight: 400; }
+  .fr-upper .shelf { position: absolute; left: 4px; right: 4px; border-top: 1.5px dashed #a7f3d0; }
+  .fr-zone { flex: 1; background: var(--fru-bg); border: 1px solid var(--fru-bd); position: relative; display: flex; }
+  .fr-zone.sel { border: 2.5px solid var(--accent); }
+  .fr-cl-l, .fr-cl-r { width: 7px; background: var(--frc-bg); flex-shrink: 0; }
+  .fr-mid { flex: 1; display: flex; flex-direction: column; }
+  .fr-cl-t { height: 9px; background: var(--fr-bg); opacity: 0.65; }
+  .fr-body { flex: 1; background: var(--fr-bg); border: 1.5px solid var(--fr-bd); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--fr-tx); }
+  .fr-body .sz { font-size: 8.5px; font-weight: 400; color: #3b82f6; }
+  .cell { background: var(--cab-bg); border: 1.5px solid var(--cab-bd); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .cell .sz { font-size: 8.5px; font-weight: 400; color: #34a384; }
+  .cell .shelf { position: absolute; left: 4px; right: 4px; border-top: 1.5px dashed #a7f3d0; }
+  .cell .drawerline { position: absolute; left: 4px; right: 4px; border-top: 2px solid #a7f3d0; }
+  .cell.sel { border: 2.5px solid var(--accent); background: #e3effe; color: var(--fr-tx); }
+  .cell.has-slots { align-items: stretch; justify-content: flex-start; padding: 3px; gap: 2px; background: #cdeede; }
+  .cell .cell-tag { position: absolute; top: 2px; left: 5px; font-size: 8px; font-weight: 700; color: var(--cab-tx); opacity: 0.7; z-index: 2; pointer-events: none; }
+  .slot { flex: 1; min-height: 15px; border: 1px solid #8fdcbd; background: #e8fbf2; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .slot.drawer { background: #d7f0e3; }
+  .slot.open { background: repeating-linear-gradient(45deg, #eef7f1, #eef7f1 3px, #fff 3px, #fff 6px); border-style: dashed; color: #5f8a76; }
+  .slot.sel { outline: 2.5px solid var(--accent); outline-offset: -2px; background: #e3effe; color: var(--fr-tx); z-index: 3; }
+  .slot .chan { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--warn-bg); border-bottom: 1.5px dashed var(--warn); }
+  .slot .shelf { position: absolute; left: 6px; right: 6px; border-top: 1.5px dashed #a7f3d0; }
+  .slot .innerd { position: absolute; left: 9px; right: 9px; border-top: 1.5px dotted #2f9e78; }
+  .slot .vsplit { position: absolute; top: 5px; bottom: 5px; left: 50%; width: 0; border-left: 1.5px dashed #5fae8c; }
+  .slot .hinge { position: absolute; bottom: 2px; font-size: 8px; color: #5f8a76; font-weight: 700; }
+  .slot .hinge-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid var(--accent); background: #fff; z-index: 2; }
+  .slot .dtier { position: absolute; left: 3px; right: 3px; border-top: 1.5px solid #8fdcbd; }
+  .slot-ins { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 1px dashed var(--warn); color: var(--warn); font-size: 12px; display: flex; align-items: center; justify-content: center; z-index: 4; }
+  .sec-divider { border-top: 1.5px dashed #94a3b8; }
+  .ins-btn { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 1px solid #cbd5e1; color: #64748b; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .rm-btn { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 1px solid #fca5a5; color: #f87171; font-size: 11px; display: flex; align-items: center; justify-content: center; z-index: 3; }
+  .dim-row { display: flex; font-family: ui-monospace, monospace; font-size: 9px; color: #64748b; padding: 3px 4px 0; }
+  .dim-row .d { text-align: center; border-top: 1px solid #94a3b8; padding-top: 2px; position: relative; }
+  .dim-row .d::before, .dim-row .d::after { content: ""; position: absolute; top: -3px; width: 1px; height: 6px; background: #94a3b8; }
+  .dim-row .d::before { left: 0; } .dim-row .d::after { right: 0; }
+  .dim-total { font-family: ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #1e293b; text-align: center; border-top: 1.5px solid #1e293b; margin: 4px 4px 0; padding-top: 2px; }
+  .dim-total.over { color: #ef4444; border-color: #ef4444; }
+  .canvas-hint { font-size: 10px; color: var(--ink-faint); padding: 6px 2px 2px; text-align: center; }
+
+  .action-bar { background: var(--surface); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .ab-row { display: flex; gap: 6px; }
+  .ab-btn { flex: 1; text-align: center; font-size: 12px; font-weight: 700; padding: 11px 0; border-radius: 10px; background: var(--accent); color: #fff; }
+  .ab-btn.gray { background: #f1f0ea; color: var(--ink-soft); font-weight: 600; }
+  .ab-btn.red { background: var(--error-bg); color: var(--error); }
+  .ab-btn.dim { opacity: 0.3; }
+  .ab-btn.sq { flex: 0 0 38px; }
+  .ab-sep { border-top: 1px solid var(--line-soft); }
+  .toggle-line { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-soft); padding: 2px 4px 0; }
+  .tr { width: 32px; height: 17px; border-radius: 99px; background: var(--line); position: relative; flex-shrink: 0; }
+  .tr::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
+  .tr.on { background: var(--accent); }
+  .tr.on::after { left: auto; right: 2px; }
+
+  .act-panel { background: var(--surface); border-radius: 14px; padding: 11px 11px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .act-head { display: flex; align-items: center; justify-content: space-between; }
+  .act-head .sel-name { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .act-head .sel-name .swatch { width: 11px; height: 11px; border-radius: 3px; background: var(--cab-bg); border: 1px solid var(--cab-bd); }
+  .act-head .deselect { font-size: 11px; color: var(--ink-faint); }
+  .act-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; color: var(--ink-faint); margin-top: 2px; }
+  .act-row { display: flex; gap: 7px; }
+  .act-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 11px 0; border-radius: 10px; background: var(--surface); border: 1.5px solid var(--line); color: var(--ink-soft); }
+  .act-btn .ico { font-size: 14px; line-height: 1; }
+  .act-btn.edit { color: var(--accent); border-color: #bcd6ef; background: var(--accent-bg); }
+  .act-btn.danger { color: var(--error); border-color: #f0c4c4; background: var(--error-bg); }
+  .act-toggle { display: flex; align-items: center; justify-content: space-between; background: var(--paper); border-radius: 10px; padding: 10px 12px; }
+  .act-toggle .lbl { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .act-toggle .sw { display: flex; align-items: center; gap: 6px; }
+  .act-sep { border-top: 1px solid var(--line-soft); margin: 2px 0; }
+  .finish-row { display: flex; align-items: center; gap: 8px; background: var(--paper); border-radius: 10px; padding: 9px 11px; }
+  .finish-row .fl { font-size: 11.5px; font-weight: 600; color: var(--ink); flex-shrink: 0; }
+  .combo { flex: 1; display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 11.5px; color: var(--ink-soft); }
+  .combo .sw { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--line); flex-shrink: 0; }
+  .combo .val { color: var(--ink-faint); }
+  .combo .val.set { color: var(--ink); font-weight: 600; }
+  .combo .caret { margin-left: auto; font-size: 9px; color: var(--ink-faint); }
+  .combo.follow { border-style: dashed; }
+  .revert { font-size: 10.5px; color: var(--accent); flex-shrink: 0; }
+  .combo-input { display: flex; align-items: center; gap: 7px; border: 1.5px solid var(--accent); border-radius: 11px; background: #fff; padding: 11px 12px; font-size: 13px; color: var(--ink); }
+  .combo-input svg { flex-shrink: 0; }
+  .combo-input .ph { color: var(--ink); }
+  .combo-list { border: 1px solid var(--line-soft); border-radius: 11px; margin-top: 7px; overflow: hidden; }
+  .combo-opt { display: flex; align-items: center; gap: 9px; padding: 10px 12px; font-size: 12.5px; border-bottom: 1px solid var(--line-soft); }
+  .combo-opt:last-child { border-bottom: none; }
+  .combo-opt.sel { background: var(--accent-bg); font-weight: 600; color: #0c447c; }
+  .combo-opt .cw { width: 15px; height: 15px; border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0; }
+  .combo-opt .chk { margin-left: auto; color: var(--accent); font-size: 12px; }
+  .ord { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 11.5px; font-weight: 600; color: var(--ink-soft); background: var(--paper); border-radius: 10px; padding: 6px 10px; }
+  .ord-b { width: 28px; height: 28px; border-radius: 7px; background: #fff; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-soft); }
+  .ord-b.dim { opacity: 0.35; }
+
+  .sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: flex-end; z-index: 5; }
+  .sheet { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; padding: 12px 16px 18px; max-height: 84%; }
+  .sheet .grip { width: 38px; height: 4px; background: var(--line-soft); border-radius: 99px; margin: 0 auto 12px; }
+  .sheet h5 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .sheet-label { font-size: 10px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.05em; margin: 8px 0 6px; }
+  .opt { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 11px; background: var(--paper); border: 2px solid transparent; margin-bottom: 5px; font-size: 12px; font-weight: 600; }
+  .opt.sel { border-color: var(--accent); background: var(--accent-bg); }
+  .opt .dim-txt { font-family: ui-monospace, monospace; font-size: 9.5px; color: var(--ink-faint); font-weight: 400; flex-shrink: 0; margin-left: 8px; text-align: right; }
+  .opt .desc { font-size: 10px; color: var(--ink-faint); font-weight: 400; }
+  .seg-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg-row .sg { flex: 1; min-width: 70px; text-align: center; font-size: 12px; font-weight: 600; padding: 10px 0; border-radius: 10px; background: var(--paper); color: var(--ink-soft); }
+  .seg-row .sg.on { background: var(--accent); color: #fff; }
+  .seg-row .sg.off { opacity: 0.35; }
+  .seg-row .sg .l2 { display: block; font-size: 9px; font-weight: 400; opacity: 0.75; margin-top: 1px; }
+  .stepper-line { display: flex; align-items: center; justify-content: space-between; background: var(--paper); border-radius: 11px; padding: 11px 13px; margin-top: 10px; font-size: 12.5px; font-weight: 600; }
+  .stepper-line .ctrl { display: flex; align-items: center; gap: 12px; }
+  .stepper-line .cbtn { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-soft); }
+  .stepper-line .num { font-size: 16px; font-weight: 700; }
+  .in-row { display: flex; gap: 6px; }
+  .in-box { flex: 1; border: 1.5px solid var(--line); border-radius: 11px; background: var(--paper); padding: 10px 11px; font-size: 12.5px; display: flex; align-items: center; }
+  .in-box.filled { color: var(--ink); font-weight: 600; }
+  .in-box .lbl { font-size: 10px; color: var(--ink-faint); margin-right: 6px; flex-shrink: 0; }
+  .in-box .unit { margin-left: auto; font-size: 10px; color: var(--ink-faint); }
+  .sheet-hint { font-size: 10px; color: var(--ink-faint); line-height: 1.6; margin-top: 6px; }
+  .sheet-cta { display: block; width: 100%; text-align: center; font-size: 13.5px; font-weight: 700; padding: 13px 0; border-radius: 13px; background: var(--accent); color: #fff; margin-top: 12px; }
+
+  .preset-sheet { max-height: 92%; overflow-y: auto; }
+  .sheet .sub { font-size: 10.5px; color: var(--ink-faint); margin: -6px 0 12px; }
+  .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+  .preset-card { background: var(--paper); border: 1.5px solid var(--line); border-radius: 12px; padding: 9px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+  .preset-card.free { border-style: dashed; justify-content: center; min-height: 132px; }
+  .pc-name { font-size: 11.5px; font-weight: 700; color: var(--ink); }
+  .pc-cap { font-size: 9px; color: var(--ink-faint); text-align: center; line-height: 1.3; min-height: 22px; }
+  .pc-col { width: 50px; height: 92px; background: #e9e7e0; padding: 3px; display: flex; flex-direction: column; gap: 2px; border-radius: 2px; }
+  .pc-door { background: var(--cab-bg); border: 1px solid var(--cab-bd); border-radius: 1px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: var(--cab-tx); position: relative; }
+  .pc-door.gtop { border-top: 1.5px dashed var(--fr-tx); }
+  .pc-door.gbot { border-bottom: 1.5px dashed var(--fr-tx); }
+  .pc-open { flex: 1; border: 1px dashed #cbd5e1; border-radius: 1px; background: repeating-linear-gradient(45deg, #f1f0ea, #f1f0ea 3px, #fff 3px, #fff 6px); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: var(--ink-faint); }
+  .pc-shelf { position: absolute; left: 5px; right: 5px; border-top: 1.5px dashed #a7f3d0; }
+  .pc-free-plus { font-size: 30px; color: var(--ink-faint); font-weight: 300; line-height: 1; }
+  .legend { margin-top: 13px; background: var(--accent-bg); border-radius: 10px; padding: 9px 11px; font-size: 10px; color: var(--ink-soft); line-height: 1.6; }
+  .legend .gline { display: inline-block; width: 16px; border-top: 1.5px dashed var(--fr-tx); vertical-align: middle; margin: 0 2px; }
+  .gate-row { display: flex; gap: 5px; margin-bottom: 12px; }
+  .gate-pill { flex: 1; position: relative; text-align: center; font-size: 11px; font-weight: 700; padding: 9px 2px; border-radius: 9px; background: var(--paper); color: var(--ink-soft); border: 1.5px solid var(--line); }
+  .gate-pill.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .gate-pill.free { color: var(--accent); border-style: dashed; background: var(--surface); }
+  .gate-pill .marker { position: absolute; top: -7px; right: -4px; width: 14px; height: 14px; font-size: 8.5px; }
+
+  .warn-band { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; border-radius: 11px; padding: 8px 12px; font-size: 11px; line-height: 1.6; }
+  .warn-band.red { background: #fef2f2; color: #ef4444; border-color: #fecaca; font-weight: 600; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+
+  .p-footer { padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; background: var(--surface); }
+  .p-btn { flex: 1; text-align: center; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1640px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  /* 브랜드 탭 (냉장고 모델 시트) — v37 추가 */
+  .brand-tabs { display: flex; gap: 4px; background: #f1f0ea; border-radius: 9px; padding: 3px; margin-bottom: 10px; }
+  .brand-tab { flex: 1; text-align: center; font-size: 12px; font-weight: 600; padding: 8px 0; border-radius: 7px; color: var(--ink-soft); cursor: pointer; user-select: none; }
+  .brand-tab.on { background: #fff; color: var(--accent); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .brand-empty { padding: 18px 12px; text-align: center; font-size: 11.5px; color: var(--ink-faint); background: var(--paper); border-radius: 11px; border: 1px dashed var(--line); margin-bottom: 5px; }
+
+  /* 면 전환 탭 · 코너 미니맵 (코너 ㄴ 전용) — v38 */
+  .face-tabs { display: flex; gap: 6px; background: #eceae3; border-radius: 11px; padding: 4px; }
+  .face-tab { flex: 1; text-align: center; font-size: 12px; font-weight: 700; padding: 8px 0; border-radius: 8px; color: var(--ink-soft); }
+  .face-tab small { display: block; font-weight: 400; font-size: 9.5px; color: var(--ink-faint); margin-top: 1px; }
+  .face-tab.on { background: #fff; color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .face-tab.on small { color: var(--accent); }
+  .face-tab .tagm { display: inline-block; font-size: 8px; font-weight: 700; border-radius: 4px; padding: 1px 4px; margin-left: 3px; vertical-align: 1px; background: #e1e7ef; color: var(--ink-soft); }
+  .face-tab.on .tagm { background: var(--accent); color: #fff; }
+  .face-tab .tagm.sub { background: #e1e7ef; color: var(--ink-soft); }
+  .minimap { display: flex; align-items: center; gap: 10px; background: var(--accent-bg); border-radius: 11px; padding: 8px 11px; }
+  .minimap .mm-cap { font-size: 10px; color: var(--ink-soft); line-height: 1.5; }
+  .minimap .mm-cap b { color: var(--accent); }
+  .corner-edge { position: absolute; top: 4px; bottom: 4px; width: 0; border-left: 2px dashed var(--accent); z-index: 2; }
+  .corner-edge .ce-lab { position: absolute; top: 50%; transform: translateY(-50%); left: 4px; white-space: nowrap; font-size: 8.5px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 4px; padding: 2px 5px; }
+  .corner-hatch { position: absolute; top: 4px; bottom: 4px; background: repeating-linear-gradient(45deg, rgba(133,79,11,0.12), rgba(133,79,11,0.12) 3px, transparent 3px, transparent 7px); border-left: 2px dashed var(--warn); z-index: 1; }
+  .corner-hatch .ch-lab { position: absolute; bottom: 3px; left: 3px; font-size: 8px; font-weight: 700; color: var(--warn); white-space: nowrap; line-height: 1.2; }
+  .rel-row { display: flex; gap: 9px; width: 100%; }
+  .rel-box { flex: 1; border: 1px solid var(--line-soft); border-radius: 10px; padding: 9px; font-size: 11px; line-height: 1.55; }
+  .rel-box .rb-h { font-weight: 700; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+  .rel-box .calc { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--accent); margin-top: 3px; }
+  .tagm2 { font-size: 9px; font-weight: 700; border-radius: 5px; padding: 2px 6px; }
+  .tagm2.main { background: var(--accent); color: #fff; }
+  .tagm2.sub { background: #e1e7ef; color: var(--ink-soft); }
+  .pill-c { display: inline-block; font-size: 10.5px; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 3px 9px; margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · v38 — 코너(ㄴ) 분기: 면 전환 탭(면 A/면 B) + 양면 허용 + 코너 미니맵(케이스 C1~C2). 안쪽(ㄱ)·데드 스페이스는 1차 제외. v37 — 냉장고 모델 시트 브랜드 탭(LG/삼성/기타) 추가. v36: 내부 채움(선반)도 칸별 높이(mm) 입력 + 같은 줄에 종류(일반/레일/속서랍), 기본 균등 분할(서랍 방식과 동일). v35: 측면 뷰 로봇 칸 도어만 짧게. v33: 라인 맞춤 토글 제거. v32: 서랍 찬넬 높이. v28: 슬롯 나누기 시트 미니 레이아웃. v27: 찬넬 슬롯 단위</div>
+  <h1>T-1.2.3 레이아웃 설계 <small>실측 위저드 3/3 단계 / 기사 / 모바일 웹·PWA · 슬롯 모델 v16</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 캔버스 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본 캔버스<small>냉장고 열 + 장 열 · 치수 주석 · 열 삽입 ＋</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="canvas-card">
+          <div class="view-tabs">
+            <span class="view-tab on">정면</span>
+            <span class="view-tab">측면 (깊이)</span>
+            <span class="marker" style="position:static; align-self:center;">V</span>
+          </div>
+          <div class="cab-outline">
+            <div class="colm" style="flex:1.5; gap:2px;">
+              <div class="fr-upper" style="flex:0 0 72px;">장<span class="sz">상부장 · 자동 배치</span><span class="shelf" style="top:50%;"></span><span class="marker" style="position:absolute; top:4px; right:4px;">1</span></div>
+              <div class="fr-zone">
+                <div class="fr-cl-l"></div>
+                <div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고<span class="sz">911 × 1,860</span></div></div>
+                <div class="fr-cl-r"></div>
+                <span class="marker" style="position:absolute; bottom:4px; left:4px;">2</span>
+              </div>
+            </div>
+            <div class="colm" style="flex:1; margin-left:2px;">
+              <div class="cell has-slots" style="flex:1.5;">
+                <span class="cell-tag">칸1 · 장</span>
+                <div class="slot" style="flex:1.7;"><span class="chan"></span>도어·양문<span class="vsplit"></span><span class="shelf" style="top:48%;"></span><span class="shelf" style="top:72%;"></span><span class="marker" style="position:absolute; right:3px; top:7px;">3</span></div>
+                <div class="slot drawer" style="flex:1.2;"><span class="chan"></span>서랍 2단<span class="dtier" style="top:50%;"></span><span class="chan" style="top:50%;"></span></div>
+              </div>
+              <div class="cell has-slots sec-divider" style="flex:1;">
+                <span class="cell-tag">칸2 · 장</span>
+                <div class="slot open" style="flex:1;">오픈<span class="shelf" style="top:50%;"></span></div>
+              </div>
+            </div>
+            <span class="ins-btn" style="left:-4px; top:46%;">＋</span>
+            <span class="ins-btn" style="left:58.5%; top:46%;">＋</span>
+            <span class="ins-btn" style="right:-4px; top:46%;">＋<span class="marker" style="position:absolute; top:-21px; left:0;">4</span></span>
+          </div>
+          <div class="dim-row">
+            <span class="d" style="flex:0.12;">4</span><span class="d" style="flex:1.26;">911</span><span class="d" style="flex:0.12;">4</span><span class="d" style="flex:1;">600</span>
+          </div>
+          <div class="dim-total">1,519mm · 높이 2,300mm <span class="marker">5</span></div>
+          <div class="canvas-hint">열 경계 ＋ = 열 추가 · 칸 ＋ = 칸(장) 나누기 · 슬롯 나누기·편집은 [슬롯 편집] 시트에서 · 주황 밴드 = 찬넬(앞판 상부)</div>
+        </div>
+        <div class="act-panel">
+          <div class="act-head">
+            <span class="sel-name">🎨 마감 설정 <span class="marker">O</span></span>
+            <span class="deselect">칸 미선택</span>
+          </div>
+          <div class="finish-row">
+            <span class="fl">도어 색상</span>
+            <span class="combo"><span class="sw" style="background:#efe9df;"></span><span class="val set">화이트 오크</span><span class="caret">▾</span></span>
+          </div>
+          <p style="font-size:10px; color:var(--ink-faint); padding:0 2px; line-height:1.5;">전체 도어 기본 색. 특정 칸만 다르게 하려면 그 칸을 선택하세요. <span class="marker" style="position:static;">O2</span></p>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">완료 <span class="marker" style="background:#fff;color:var(--ink);">6</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 요소 선택 시트 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 요소 선택 시트<small>＋ 탭 → 냉장고 / 장 (가벽은 명세에 없어 제외)</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 72px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell" style="flex:1;">장</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="grip"></div>
+          <h5>요소 선택 <span class="marker">7</span></h5>
+          <div class="opt">🧊&nbsp; 냉장고 <span class="dim-txt">모델 선택 → 폭·여유공간 자동 계산</span></div>
+          <div class="opt">📦&nbsp; 장 <span class="dim-txt">→ 구성 프리셋 선택 (케이스 2-2)</span></div>
+          <p class="sheet-hint">냉장고를 1대 더 추가하면 "설치 대수 2대 이상" 구성 — 인접 냉장고 사이 간격은 모델 조합 규칙으로 자동 적용 <span class="marker">8</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2-2a: 장 프리셋 게이트 — 2등분 (v7) -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2-2 ⓐ — 장 프리셋 · 2등분<small>＋ → 장 선택 시 / 상단 게이트로 등분 고르면 변형만 표시</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.3;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 60px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell" style="flex:1;">장</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="grip"></div>
+          <h5>장 구성 선택 <span class="marker">P1</span></h5>
+          <div class="gate-row">
+            <span class="gate-pill">1등분<span class="marker">P2</span></span>
+            <span class="gate-pill on">2등분</span>
+            <span class="gate-pill">3등분</span>
+            <span class="gate-pill">4등분<span class="marker">P4</span></span>
+            <span class="gate-pill free">자유구성<span class="marker">P7</span></span>
+          </div>
+          <div class="sub">2등분 — 변형 3가지 <span class="marker">P3</span></div>
+          <div class="preset-grid">
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door" style="flex:1;">D1</div><div class="pc-door" style="flex:1;">D2</div></div>
+              <div class="pc-name">균등</div>
+              <div class="pc-cap">D1·D2 동일 높이</div>
+            </div>
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door gbot" style="flex:0.5;">D1</div><div class="pc-door" style="flex:1.2;">D2</div></div>
+              <div class="pc-name">상부 맞춤</div>
+              <div class="pc-cap">위 도어(D1) = 상부장 라인</div>
+            </div>
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door" style="flex:1.2;">D1</div><div class="pc-door gtop" style="flex:0.55;">D2</div></div>
+              <div class="pc-name">하부 맞춤</div>
+              <div class="pc-cap">아래 도어(D2) = 냉장고 하단 라인</div>
+            </div>
+          </div>
+          <div class="legend"><span class="gline"></span> 파란 점선 = 옆 냉장고 상부장·하단 도어 라인 자동 정렬 <span class="marker">P8</span> · 적용 후 칸·속·크기 조정 가능</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2-2b: 장 프리셋 게이트 — 3등분 (v7) -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2-2 ⓑ — 장 프리셋 · 3등분<small>같은 시트, 게이트 [3등분] 선택 시 변형 교체 (스크롤 없음)</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.3;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 60px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell" style="flex:1;">장</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="grip"></div>
+          <h5>장 구성 선택</h5>
+          <div class="gate-row">
+            <span class="gate-pill">1등분</span>
+            <span class="gate-pill">2등분</span>
+            <span class="gate-pill on">3등분</span>
+            <span class="gate-pill">4등분</span>
+            <span class="gate-pill free">자유구성</span>
+          </div>
+          <div class="sub">3등분 — 변형 3가지 <span class="marker">P5</span></div>
+          <div class="preset-grid">
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door" style="flex:1;">D1</div><div class="pc-door" style="flex:1;">D2</div><div class="pc-door" style="flex:1;">D3</div></div>
+              <div class="pc-name">균등</div>
+              <div class="pc-cap">D1·D2·D3 동일 높이</div>
+            </div>
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door gbot" style="flex:0.5;">D1</div><div class="pc-door" style="flex:1;">D2</div><div class="pc-door gtop" style="flex:0.55;">D3</div></div>
+              <div class="pc-name">상하 맞춤</div>
+              <div class="pc-cap">위(D1)=상부장 · 아래(D3)=냉장고 하단</div>
+            </div>
+            <div class="preset-card">
+              <div class="pc-col"><div class="pc-door gbot" style="flex:0.5;">D1</div><div class="pc-open">오픈</div><div class="pc-door gtop" style="flex:0.55;">D2</div></div>
+              <div class="pc-name">홈바형 <span class="marker">P6</span></div>
+              <div class="pc-cap">가운데 도어 없음 (칸은 3등분)</div>
+            </div>
+          </div>
+          <div class="legend">1등분 → 1도어(선반 2단) · 4등분 변형은 추후 직접 채움(예약) · 자유구성은 바로 빈 장 삽입</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 칸 선택 + 액션 바 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 칸(장) 선택 · 편집<small>칸 선택 → 칸 패널(바닥·라인·상부 가림막·색·크기) · 슬롯 나누기·편집은 [슬롯 편집] 시트</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="canvas-card">
+          <div class="cab-outline">
+            <div class="colm" style="flex:1.5; gap:2px;">
+              <div class="fr-upper" style="flex:0 0 72px;">장</div>
+              <div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div>
+            </div>
+            <div class="colm" style="flex:1; margin-left:2px; position:relative;">
+              <div class="cell sel has-slots" style="flex:1.4;">
+                <span class="cell-tag">칸1 · 장 (선택됨) 600×1,380</span>
+                <div class="slot" style="flex:1.6;"><span class="chan"></span>도어</div>
+                <div class="slot drawer" style="flex:0.7;"><span class="chan"></span>서랍</div>
+                <span class="ins-btn" style="top:3px; left:50%; transform:translateX(-50%);">＋</span>
+                <span class="ins-btn" style="bottom:3px; left:50%; transform:translateX(-50%);">＋</span>
+              </div>
+              <div class="cell has-slots sec-divider" style="flex:0.8;">
+                <span class="cell-tag">칸2 · 장</span>
+                <div class="slot open" style="flex:1;">오픈</div>
+                <span class="rm-btn" style="top:-9px; right:3px;">×<span class="marker" style="position:absolute; right:-22px; top:0;">A</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="dim-row">
+            <span class="d" style="flex:0.12;">4</span><span class="d" style="flex:1.26;">911</span><span class="d" style="flex:0.12;">4</span><span class="d" style="flex:1;">600</span>
+          </div>
+          <div class="dim-total">1,519mm · 높이 2,300mm</div>
+        </div>
+        <div class="act-panel">
+          <div class="act-head">
+            <span class="sel-name"><span class="swatch"></span> 칸(장) 선택됨 · 600×1,380</span>
+            <span class="deselect">✕ 선택 해제</span>
+          </div>
+          <div class="act-label">칸(장) 편집</div>
+          <div class="act-row">
+            <span class="act-btn edit"><span class="ico">⤢</span> 크기 설정</span>
+            <span class="act-btn edit"><span class="ico">▥</span> 슬롯 편집 <span class="marker" style="align-self:center;">B</span></span>
+          </div>
+          <div class="act-toggle"><span class="lbl">▭ 상부 가림막 (옆 냉장고와 높이 맞춤)</span><span class="sw"><span class="tr"></span><span class="marker">TG</span></span></div>
+          <p class="act-hint" style="margin:4px 2px 0; font-size:10.5px; color:var(--ink-faint);">장과 장 사이(또는 장 위)에 들어가 옆 냉장고 높이에 맞추는 ㅁ자 가로 부재. 켜면 높이는 <b>냉장고와의 높이 차이만큼 자동 계산</b>(별도 입력 없음). 현장 호칭은 '찬넬'이나 앞판 상부 찬넬과 구분해 '상부 가림막'.</p>
+          <div class="act-toggle"><span class="lbl">↔ 바깥 면 트임 (바깥쪽 열일 때)</span><span class="sw"><span class="tr"></span><span class="marker">T1</span></span></div>
+          <p class="act-hint" style="margin:4px 2px 0; font-size:10.5px; color:var(--ink-faint);">이 장(칸)의 바깥(맨 왼/오른) 면을 트는 설정 — 트임은 슬롯이 아니라 칸 단위. 방향 자동(왼끝=좌·오른끝=우), 바깥쪽 열이 아니면 미노출. <b>오픈 슬롯이 아닌 칸에서 켜면 "오픈 슬롯 + 트임으로 진행합니다" 안내 후 그 칸을 오픈으로 전환.</b></p>
+          <div class="act-toggle"><span class="lbl">🤖 로봇청소기 자리 (바닥 칸 · 걸레받이 대신)</span><span class="sw"><span class="tr"></span><span class="marker">H1</span></span></div>
+          <div class="act-label">마감</div>
+          <div class="finish-row">
+            <span class="fl">도어 색상</span>
+            <span class="combo follow"><span class="sw"></span><span class="val">전체 따름</span><span class="caret">▾</span></span>
+            <span class="revert">전체로 <span class="marker" style="position:static;">M</span></span>
+          </div>
+          <div class="act-sep"></div>
+          <div class="act-label">열</div>
+          <div class="act-row">
+            <span class="ord">열 순서 <span class="ord-b dim">◀</span><span class="ord-b">▶</span></span>
+            <span class="act-btn danger"><span class="ico">🗑</span> 열 삭제 <span class="marker" style="align-self:center;">D</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">완료</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 냉장고 칸 패널 (여유공간 상시 수정) -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 4 — 냉장고 칸 패널<small>냉장고 칸 탭 → 여유공간(좌·우·위) 상시 수정 · [모델 변경]은 케이스 4-2 시트</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 72px;">장</div><div class="fr-zone sel"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell" style="flex:1;">장</div></div>
+        </div></div>
+        <div class="act-panel">
+          <div class="act-head">
+            <span class="sel-name"><span class="swatch" style="background:var(--fr-bg); border-color:var(--fr-bd);"></span> 냉장고 칸 선택됨 · 911×1,860</span>
+            <span class="deselect">✕ 선택 해제</span>
+          </div>
+          <div class="act-label">여유공간 (mm) <span class="marker" style="position:static;">F</span></div>
+          <div class="in-row" style="margin-top:0;">
+            <div class="in-box filled"><span class="lbl">좌</span>40</div>
+            <div class="in-box filled"><span class="lbl">우</span>40</div>
+            <div class="in-box filled"><span class="lbl">위</span>20</div>
+          </div>
+          <p class="sheet-hint" style="margin-top:6px;">냉장고 칸을 선택하면 여기서 여유공간을 바로 수정. 모델 선택 시 모델 기본값으로 채워지고 그대로 고칠 수 있음(모델 변경 시트 재오픈 불필요). 2대 이상은 외곽·사이·위 — 사이는 모델 조합 규칙 기본값.</p>
+          <div class="act-sep"></div>
+          <div class="act-label">앞밴드 (가림막)</div>
+          <div class="act-toggle"><span class="lbl">앞밴드 있음</span><span class="sw"><span class="tr on"></span><span class="marker">AB</span></span></div>
+          <p class="act-hint" style="margin:4px 2px 0; font-size:10.5px; color:var(--ink-faint);">냉장고장 앞면 가림막(세로·가로). 1차에는 유무만 — 켜면 작업지시서에 "있음"으로 노출(상세 재단·치수는 추후).</p>
+          <div class="act-sep"></div>
+          <div class="act-label">칸 편집</div>
+          <div class="act-row">
+            <span class="act-btn edit"><span class="ico">🧊</span> 모델 변경 <span class="marker" style="align-self:center;">E</span></span>
+          </div>
+          <div class="act-sep"></div>
+          <div class="act-label">열</div>
+          <div class="act-row">
+            <span class="ord">열 순서 <span class="ord-b dim">◀</span><span class="ord-b">▶</span></span>
+            <span class="act-btn danger"><span class="ico">🗑</span> 열 삭제</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4-2: 냉장고 [모델 변경] 시트 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 4-2 — 냉장고 [모델 변경] 시트<small>[모델 변경] 누르면 열림 · 브랜드 탭(LG/삼성/기타)으로 필터 · 모델 선택/직접 입력</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 72px;">장</div><div class="fr-zone sel"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell" style="flex:1;">장</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet" style="max-height:90%; overflow-y:auto;">
+          <div class="grip"></div>
+          <h5>냉장고 모델 선택 <span class="marker">E</span></h5>
+          <div class="brand-tabs" id="brandTabs">
+            <span class="brand-tab on" data-brand="lg">LG</span>
+            <span class="brand-tab" data-brand="samsung">삼성</span>
+            <span class="brand-tab" data-brand="etc">기타</span>
+          </div>
+          <div id="brandList">
+            <div class="opt sel" data-brand="lg">LG 디오스 오브제컬렉션 Fit &amp; Max (G646) <span class="dim-txt">911×1860</span></div>
+            <div class="opt" data-brand="lg">빌트인 · LG 모던엣지 오브제컬렉션 무드업 (Q344) <span class="dim-txt">584×1870</span></div>
+            <div class="opt" data-brand="lg">빌트인 · LG 컨버터블 (김치전용고, 좌) (Z320) <span class="dim-txt">584×1860</span></div>
+            <div class="opt" data-brand="samsung" style="display:none;">키친핏 · 삼성 Bespoke 4도어 <span class="dim-txt">908×1853</span></div>
+            <div class="opt" data-brand="samsung" style="display:none;">프리스탠딩 · 삼성 Infinite Line 4도어 <span class="dim-txt">912×1856</span></div>
+          </div>
+          <div class="brand-empty" id="brandEmpty" style="display:none;">등록된 기타 브랜드 모델이 없습니다. 아래 [직접 입력]을 이용하세요.</div>
+          <div class="opt">직접 입력 <span class="dim-txt">치수 직접 지정 <span class="marker">F</span></span></div>
+          <div class="in-row" style="margin-top:6px;">
+            <div class="in-box filled"><span class="lbl">폭</span>900</div>
+            <div class="in-box filled"><span class="lbl">높이</span>1,850</div>
+            <div class="in-box filled"><span class="lbl">깊이</span>750</div>
+          </div>
+          <p class="sheet-hint">상단 브랜드 탭(LG / 삼성 / 기타)으로 목록을 필터링 — 탭을 누르면 해당 브랜드 모델만 표시. [직접 입력]은 브랜드와 무관하게 항상 노출. 폭·높이·깊이는 모델 값(직접 입력 시 수동, 각 1–3,000mm). <b>여유공간(좌·우·위)은 냉장고 칸 패널(케이스 4)에서 상시 수정.</b> <span class="marker">F</span></p>
+          <span class="sheet-cta">적용</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 5: 장 내부 구성 시트 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 5 — 슬롯 [편집] 시트<small>슬롯(도어/서랍/오픈) 탭 → 종류·도어 방식·내부 채움·트임 / 상부장 슬롯도 동일</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 72px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell has-slots" style="flex:1;"><span class="cell-tag">칸 · 장</span><div class="slot sel" style="flex:1.5;"><span class="chan"></span>도어</div><div class="slot drawer" style="flex:0.8;"><span class="chan"></span>서랍</div></div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay" style="position:relative; align-items:stretch;">
+        <div class="sheet" style="max-height:none;">
+          <div class="grip"></div>
+          <h5>슬롯 편집 <span class="marker">G</span></h5>
+          <p class="sub" style="margin:-4px 0 10px;">이 장(칸)의 슬롯을 <b style="color:var(--warn);">＋</b>로 나누고, 슬롯을 탭해 종류·옵션을 정합니다</p>
+          <div style="display:flex; gap:14px; align-items:stretch; margin:0 0 12px;">
+            <div class="cell has-slots" style="width:120px; height:208px; flex:0 0 auto; border-radius:8px;">
+              <div class="slot drawer" style="flex:0.85;"><span class="chan"></span>서랍 2단<span class="dtier" style="top:50%;"></span><span class="chan" style="top:50%;"></span>
+                <span class="slot-ins" style="bottom:-9px; left:50%; transform:translateX(-50%);">＋</span>
+              </div>
+              <div class="slot sel" style="flex:1.5;"><span class="chan"></span>도어<span class="hinge-dot" style="left:3px; top:22%;"></span><span class="hinge-dot" style="left:3px; bottom:22%;"></span>
+                <span class="slot-ins" style="top:-9px; left:50%; transform:translateX(-50%);">＋</span>
+              </div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:7px;">
+              <div style="font-size:11.5px; font-weight:700; color:var(--ink);">이 장(칸)의 슬롯</div>
+              <div style="font-size:10.5px; color:var(--ink-soft); line-height:1.5;">위: 서랍 2단 · <b style="color:var(--accent);">아래: 도어 단문·좌경(선택됨)</b></div>
+              <div style="font-size:10.5px; color:var(--ink-faint); line-height:1.55;"><span style="color:var(--warn); font-weight:700;">＋</span> = 슬롯을 위·아래로 추가 · 탭해서 옵션 편집<br>처음 열면 <b>도어 1개</b>가 기본 · 도어는 경첩 변에 <span style="display:inline-block;width:6px;height:6px;border:1.5px solid var(--accent);border-radius:50%;vertical-align:middle;"></span><span style="display:inline-block;width:6px;height:6px;border:1.5px solid var(--accent);border-radius:50%;vertical-align:middle;margin-left:2px;"></span>(위·아래 한 쌍) 표시(플랩은 상단)</div>
+            </div>
+          </div>
+          <div class="act-sep"></div>
+          <div class="sheet-label" style="margin-top:12px;">슬롯 종류 — 선택: 아래 도어 <span class="marker">SL</span></div>
+          <div class="seg-row">
+            <span class="sg on">도어<span class="l2">여닫는 문</span></span>
+            <span class="sg">서랍<span class="l2">전면 서랍</span></span>
+            <span class="sg">오픈<span class="l2">앞 트임</span></span>
+          </div>
+          <p class="sheet-hint">도어·서랍은 앞판이 있어 깊이에서 앞판 두께만큼 차감(찬넬도 이 앞판 상부). 오픈은 앞판 없음 — 깊이 차감·찬넬 없음, 대신 트임 가능. <span class="marker">G1</span></p>
+
+          <div class="sheet-label" style="margin-top:14px;">도어 방식 (도어 슬롯만) <span class="marker">DM</span></div>
+          <div class="seg-row">
+            <span class="sg">플랩<span class="l2">위로 들림</span></span>
+            <span class="sg on">단문<span class="l2">한 짝 여닫이</span></span>
+            <span class="sg">양문<span class="l2">좌·우 두 짝</span></span>
+          </div>
+          <div class="sheet-label" style="margin-top:10px;">경첩 방향 (단문일 때) <span class="marker">DM2</span></div>
+          <div class="seg-row">
+            <span class="sg on">좌경<span class="l2">좌측 경첩</span></span>
+            <span class="sg">우경<span class="l2">우측 경첩</span></span>
+          </div>
+          <p class="sheet-hint"><b>플랩</b>=위로 들어올림 · <b>단문</b>=한 짝(경첩 방향 좌/우 입력) · <b>양문</b>=좌·우 두 짝(폭 반반·방향 자동). 경첩 방향 행은 단문일 때만 노출. 좌우 폭이 다르거나 한쪽만 서랍인 비대칭은 한 장이 아니라 열을 따로 둠. 서랍·오픈 슬롯엔 도어 방식 없음. <b>위 레이아웃에 경첩 위치가 ◦◦(위·아래 한 쌍)로 표시</b>(단문=경첩 쪽 한 변, 양문=양쪽 변 각각, 플랩=상단). <span class="marker">DM1</span></p>
+
+          <div class="act-sep" style="margin:12px 0 0;"></div>
+          <div class="sheet-label" style="margin-top:12px;">찬넬 · 앞판 상부 (도어 슬롯) <span class="marker">CH</span></div>
+          <div class="act-toggle"><span class="lbl">🗄️ 이 도어 앞판에 찬넬 적용 (라인 맞춤 시)</span><span class="sw"><span class="tr"></span><span class="marker">CH2</span></span></div>
+          <div class="finish-row" style="margin-top:8px;"><span class="fl">찬넬 높이</span><span class="combo" style="border-style:solid;"><span class="val set">12</span><span style="margin-left:auto;font-size:10px;color:var(--ink-faint);">mm</span></span></div>
+          <p class="sheet-hint"><b>도어 찬넬은 슬롯마다 개별로 켠다</b>(같은 칸 안 도어끼리 달라도 됨). 켜면 높이도 이 슬롯에서 입력. <b>서랍 슬롯은 각 단 앞판 상부에 항상 들어가며 높이만 서랍 섹션에서 설정</b> · <b>오픈 슬롯은 앞판 없어 제외</b>. <span class="marker">CH1</span></p>
+
+          <div class="sheet-label" style="margin-top:14px;">내부 채움 (도어·오픈 슬롯) <span class="marker">G2</span></div>
+          <div class="stepper-line" style="margin-top:0;">
+            <span>칸 개수</span>
+            <span class="ctrl"><span class="cbtn">−</span><span class="num">3</span><span class="cbtn">＋</span></span>
+          </div>
+          <div class="act-toggle" style="margin-top:6px;">
+            <span class="lbl">칸 높이 균등 분할</span>
+            <span class="sw"><span class="tr on"></span></span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:5px; margin-top:8px;">
+            <div class="finish-row" style="padding:8px 10px;"><span class="fl" style="width:26px;">1번</span><span class="combo" style="flex:1;"><span class="val set">일반 선반</span><span class="caret">▾</span></span><span class="combo" style="flex:0 0 70px; border-style:solid; padding:8px; opacity:0.5;"><span class="val set">자동</span><span style="margin-left:auto;font-size:9px;color:var(--ink-faint);">mm</span></span></div>
+            <div class="finish-row" style="padding:8px 10px;"><span class="fl" style="width:26px;">2번</span><span class="combo" style="flex:1;"><span class="val set" style="color:var(--accent);">레일 선반</span><span class="caret">▾</span></span><span class="combo" style="flex:0 0 70px; border-style:solid; padding:8px; opacity:0.5;"><span class="val set">자동</span><span style="margin-left:auto;font-size:9px;color:var(--ink-faint);">mm</span></span></div>
+            <div class="finish-row" style="padding:8px 10px;"><span class="fl" style="width:26px;">3번</span><span class="combo" style="flex:1;"><span class="val set">속서랍</span><span class="caret">▾</span></span><span class="combo" style="flex:0 0 70px; border-style:solid; padding:8px; opacity:0.5;"><span class="val set">자동</span><span style="margin-left:auto;font-size:9px;color:var(--ink-faint);">mm</span></span></div>
+          </div>
+          <p class="sheet-hint">위에서 아래로 각 칸의 <b>종류(일반 선반 / 레일 선반 / 속서랍)</b>와 <b>높이(mm)</b>를 같은 줄에서 지정. 높이는 <b>기본 균등 분할</b>, [균등 분할]을 끄면 칸별로 직접 입력(서랍 단 수와 동일 방식). <b>속서랍은 도어 슬롯에서만</b> — 오픈 슬롯은 선반·레일선반만. 서랍 슬롯엔 내부 채움 없음. <span class="marker">G3</span></p>
+
+          <div class="act-sep" style="margin:12px 0 0;"></div>
+          <div class="sheet-label" style="margin-top:12px;">서랍 단 수 (서랍 슬롯) <span class="marker">DR</span></div>
+          <div class="stepper-line" style="margin-top:0;">
+            <span>단 수</span>
+            <span class="ctrl"><span class="cbtn">−</span><span class="num">2</span><span class="cbtn">＋</span></span>
+          </div>
+          <div class="act-toggle" style="margin-top:6px;">
+            <span class="lbl">단 높이 균등 분할</span>
+            <span class="sw"><span class="tr on"></span></span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:5px; margin-top:8px; opacity:0.5;">
+            <div class="finish-row"><span class="fl" style="width:48px;">1단</span><span class="combo" style="border-style:solid;"><span class="val set">자동</span><span style="margin-left:auto;font-size:10px;color:var(--ink-faint);">mm</span></span></div>
+            <div class="finish-row"><span class="fl" style="width:48px;">2단</span><span class="combo" style="border-style:solid;"><span class="val set">자동</span><span style="margin-left:auto;font-size:10px;color:var(--ink-faint);">mm</span></span></div>
+          </div>
+          <p class="sheet-hint">서랍 슬롯 = 전면 서랍 영역 1개. <b>단 수</b>를 숫자로 정하면 그만큼 전면 서랍이 가로로 쌓인다(캔버스에 단 분리선 자동). 단 높이는 <b>기본 균등 분할</b>, [균등 분할]을 끄면 단별 높이를 직접 입력(서랍장은 보통 단 크기가 다름). <span class="marker">DR1</span></p>
+
+          <div class="sheet-label" style="margin-top:12px;">찬넬 · 각 단 앞판 상부 (서랍 슬롯) <span class="marker">DC</span></div>
+          <div class="finish-row" style="margin-top:0;"><span class="fl">찬넬 높이</span><span class="combo" style="border-style:solid;"><span class="val set">12</span><span style="margin-left:auto;font-size:10px;color:var(--ink-faint);">mm</span></span></div>
+          <p class="sheet-hint">서랍 찬넬은 <b>각 단 앞판 상부에 항상 들어간다(끌 수 없음)</b> — 도어와 달리 켜고 끄지 않고 <b>높이만</b> 설정한다. 입력한 높이가 모든 단 앞판 상부에 적용. <span class="marker">DC1</span></p>
+
+          <p class="sheet-hint" style="margin-top:10px;">슬롯 ＋는 종류가 다른 면(도어/서랍/오픈)을 나눌 때만 — 같은 서랍의 단 수는 위 <b>서랍 단 수</b>로. 도어 찬넬은 이 시트에서 슬롯별로 적용. <b>바깥 면 트임·바닥 걸레받이↔로봇청소기·상부 가림막·도어 색상은 칸(장) 단위 설정</b>이라 칸 패널(케이스 3)에서 다룸. <span class="marker">G4</span></p>
+          <span class="sheet-cta">적용</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 6: 크기 설정 시트 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 6 — [크기 설정] 시트<small>열 폭 + 칸 높이 (자동/직접 지정 mm)</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 72px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell sel" style="flex:1;">선택됨</div><div class="cell sec-divider" style="flex:0.6;">장</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="grip"></div>
+          <h5>크기 설정 <span class="marker">I</span></h5>
+          <div class="sheet-label">열 폭</div>
+          <div class="seg-row"><span class="sg on">나머지 공간 채우기</span><span class="sg">직접 지정</span></div>
+          <div class="sheet-label">칸 높이</div>
+          <div class="seg-row"><span class="sg">자동 (남은 공간)</span><span class="sg on">직접 지정</span></div>
+          <div class="in-row" style="margin-top:6px;"><div class="in-box filled" style="font-size:16px; font-weight:700; justify-content:flex-end;">1,060</div><div class="in-box" style="flex:0 0 50px; justify-content:center;">mm</div></div>
+          <p class="sheet-hint">최소 칸 크기 미만으로는 지정 불가 · 칸을 원하는 위치(mm)에서 나누려면 ＋로 칸 추가 후 높이를 직접 지정</p>
+          <span class="sheet-cta">적용</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 8: 마감 설정 — 색상 콤보박스 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 8 — 마감 설정(색상)<small>도어 색상 콤보박스 · 전체 기본값 / 칸 override · 오픈장은 홈바 색상</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="canvas-card"><div class="cab-outline">
+          <div class="colm" style="flex:1.5; gap:2px;"><div class="fr-upper" style="flex:0 0 60px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+          <div class="colm" style="flex:1; margin-left:2px;"><div class="cell sel" style="flex:1;">오픈장 칸</div></div>
+        </div></div>
+      </div>
+      <div class="sheet-overlay">
+        <div class="sheet" style="max-height:90%; overflow-y:auto;">
+          <div class="grip"></div>
+          <h5>마감 설정 <span class="marker">N</span></h5>
+          <p class="sub" style="margin:-4px 0 12px;">색상은 목록에서 검색·선택 (직접 입력 불가). 도어·홈바 같은 목록 공유</p>
+
+          <div class="sheet-label">도어 색상 · 전체 기본값 <span class="marker">N1</span></div>
+          <div class="combo-input">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="sw" style="width:14px;height:14px;border-radius:4px;border:1px solid var(--line);background:#efe9df;"></span>
+            <span class="ph">화이트 오크</span>
+          </div>
+          <div class="combo-list">
+            <div class="combo-opt sel"><span class="cw" style="background:#efe9df;"></span> 화이트 오크 <span class="chk">✓</span></div>
+            <div class="combo-opt"><span class="cw" style="background:#f7f6f2;"></span> 퓨어 화이트</div>
+            <div class="combo-opt"><span class="cw" style="background:#3a3a38;"></span> 매트 차콜</div>
+            <div class="combo-opt"><span class="cw" style="background:#9a7b56;"></span> 월넛</div>
+          </div>
+          <p class="sheet-hint">전체 기본값을 바꾸면 "전체 따름" 칸이 모두 따라 바뀌고, 개별 지정한 칸은 유지됩니다. <span class="marker">N2</span></p>
+
+          <div class="sheet-label" style="margin-top:14px;">이 칸(오픈장) · 홈바 색상 <span class="marker">N3</span></div>
+          <div class="combo-input">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="sw" style="width:14px;height:14px;border-radius:4px;border:1px solid var(--line);background:#3a3a38;"></span>
+            <span class="ph">매트 차콜</span>
+          </div>
+          <div class="combo-list">
+            <div class="combo-opt"><span class="cw" style="background:#efe9df;"></span> 화이트 오크</div>
+            <div class="combo-opt"><span class="cw" style="background:#f7f6f2;"></span> 퓨어 화이트</div>
+            <div class="combo-opt sel"><span class="cw" style="background:#3a3a38;"></span> 매트 차콜 <span class="chk">✓</span></div>
+            <div class="combo-opt"><span class="cw" style="background:#9a7b56;"></span> 월넛</div>
+          </div>
+          <p class="sheet-hint">홈바 색상은 전체 기본값 없이 오픈장 칸에서 직접 지정합니다. 오픈장이 아닌 칸에는 이 항목이 표시되지 않습니다. <span class="marker">N4</span></p>
+          <span class="sheet-cta">적용</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 9: 측면 뷰 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 9 — 측면 뷰 (깊이)<small>칸 높이 스택 × 깊이 · 앞판 깊이 차감·찬넬·오픈 트임·로청 바닥 띄움·콘센트 보정</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="canvas-card">
+          <div class="view-tabs">
+            <span class="view-tab">정면</span>
+            <span class="view-tab on">측면 (깊이)</span>
+          </div>
+          <div class="side-toggle">
+            <span class="side-seg">
+              <span class="s on">좌측에서</span>
+              <span class="s">우측에서</span>
+            </span>
+            <span class="marker" style="position:static;">V2</span>
+          </div>
+          <div class="side-view" style="flex-direction:column; align-items:stretch; gap:6px;">
+            <div style="display:flex; gap:8px; flex:1;">
+              <span class="side-axis">↑ 위 · 아래 ↓</span>
+              <div class="side-stack">
+                <div class="srow">
+                  <div class="s-front"><span class="s-chan"></span></div>
+                  <div class="s-body">도어 슬롯<span class="dep">깊이 578 · 앞판 차감</span><span class="s-outlet"></span><span class="marker" style="position:absolute; right:3px; top:3px;">W1</span></div>
+                </div>
+                <div class="srow drawer">
+                  <div class="s-front"><span class="s-chan"></span></div>
+                  <div class="s-body">서랍 슬롯<span class="dep">깊이 578 · 앞판 차감</span><span class="s-outlet"></span></div>
+                </div>
+                <div class="srow trim">
+                  <div class="s-body">오픈 슬롯 · 트임<span class="dep">깊이 600 · 앞판 없음</span><span class="trim-badge">↔ 트임 (좌)</span><span class="trim-arrow l">↤</span><span class="marker" style="position:absolute; right:3px; top:3px;">W3</span></div>
+                </div>
+                <div class="srow robot">
+                  <div class="s-front"><span class="s-chan"></span></div>
+                  <span class="s-liftgap"></span>
+                  <div class="s-body">로봇청소기 칸<span class="dep">590</span></div>
+                  <span class="s-liftlabel">↳ 도어 바닥 150mm 띄움 (장 높이는 그대로) <span class="marker" style="position:static;">W2</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="side-cap">← 앞(도어/서랍 앞판) · 뒤(벽) → · 상단 주황 = 찬넬(앞판 상부) · 우측 빗금 = 콘센트 30mm 보정</div>
+          </div>
+          <div class="side-legend">
+            <span class="tr-mk">▮ 주황 칸 + ↔트임 뱃지 + 화살표</span> = 트인 오픈 슬롯(바깥 면 개방, 앞판 없음). 도어·서랍 슬롯은 <b>앞판(왼쪽 파란 띠) + 상부 찬넬</b> + 앞판 두께만큼 깊이 차감. 로봇청소기 칸은 바닥 150mm 띄움(점선), 콘센트 보정은 뒤(우측) 30mm 빗금. 정면에선 안 보이던 깊이 방향 정보. <span class="marker">W4</span>
+          </div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">완료</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 7: 경고·에러 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 7 — 경고 · 에러<small>전체 폭 초과 / 장 폭 600 초과 / 에러 토스트</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-body" style="gap:8px; padding:14px 12px;">
+        <div class="canvas-card" style="flex:none;">
+          <div class="cab-outline" style="height:130px;">
+            <div class="colm" style="flex:1.4; gap:2px;"><div class="fr-upper" style="flex:0 0 32px;">장</div><div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body" style="font-size:9px;">냉장고</div></div><div class="fr-cl-r"></div></div></div>
+            <div class="colm" style="flex:1.15; margin-left:2px;"><div class="cell sel" style="flex:1;">선택됨<span class="sz">650 × 2,300</span></div></div>
+          </div>
+          <div class="dim-total over">▲ 1,683mm (83mm 초과) <span class="marker">J</span></div>
+        </div>
+        <div class="warn-band red">⚠ 전체 폭이 83mm 초과됩니다 — 장 폭을 줄이거나 요소를 제거하세요</div>
+        <div class="warn-band">⚠ 한 장(칸)의 폭이 600mm를 초과합니다. 폭이 너무 넓으면 처짐 등 무리가 갈 수 있습니다. <span class="marker">K</span></div>
+        <div class="toast">⚠ 냉장고 정보를 모두 입력해주세요. <span class="marker" style="margin-left:auto;">L</span></div>
+        <div class="toast">⚠ 칸이 너무 작아 나눌 수 없습니다.</div>
+        <div class="toast">⚠ 같은 크기의 인접한 칸끼리만 합칠 수 있습니다.</div>
+        <div class="toast">⚠ 합판 재단 계산에 실패했습니다. 입력값을 확인해주세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 코너(ㄴ) 케이스 C1~C3 — v38 추가. 면 안 편집은 위 케이스 1~9와 동일 ===== -->
+
+  <!-- 코너 케이스 C1: 면 A 작업 중 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 C1 — 코너(ㄴ) · 면 A 작업 중<small>면 전환 탭 + 코너 미니맵 / 면 안 편집은 케이스 1~9 동일</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장 (코너 ㄴ)</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="face-tabs">
+          <span class="face-tab on">면 A · 가로 벽<span class="tagm">주 면</span><small>벽 1,800</small></span>
+          <span class="face-tab">면 B · 세로 벽<span class="tagm sub">종속</span><small>벽 1,200</small></span>
+          <span class="marker" style="position:static; align-self:center;">10</span>
+        </div>
+        <div class="minimap">
+          <div data-mini="A"></div>
+          <div class="mm-cap">위에서 본 코너 · 지금 <b>면 A(가로 벽)</b> 작업 중. 면 A가 코너를 끝까지 차지하고 면 B를 바깥에서 감쌈. <span class="marker">11</span></div>
+        </div>
+        <div class="canvas-card">
+          <div class="view-tabs">
+            <span class="view-tab on">정면</span>
+            <span class="view-tab">측면 (깊이)</span>
+          </div>
+          <div class="cab-outline">
+            <div class="colm" style="flex:1.5; gap:2px;">
+              <div class="fr-upper" style="flex:0 0 64px;">장<span class="sz">상부장</span><span class="shelf" style="top:50%;"></span></div>
+              <div class="fr-zone"><div class="fr-cl-l"></div><div class="fr-mid"><div class="fr-cl-t"></div><div class="fr-body">냉장고<span class="sz">911 × 1,860</span></div></div><div class="fr-cl-r"></div></div>
+            </div>
+            <div class="colm" style="flex:1; margin-left:2px;">
+              <div class="cell" style="flex:1.4;"><span class="cell-tag">칸1 · 장</span>도어</div>
+              <div class="cell sec-divider" style="flex:1;"><span class="cell-tag">칸2 · 장</span>서랍</div>
+            </div>
+            <span class="corner-edge" style="right:4px;"><span class="ce-lab">코너 ↘ 면 B와 만남</span></span>
+          </div>
+          <div class="dim-row">
+            <span class="d" style="flex:1.5;">911 냉장고열</span><span class="d" style="flex:1;">600 장열</span>
+          </div>
+          <div class="dim-total">면 A 면판 2,390mm = 벽 1,800 + 면 B 깊이 590 · 높이 2,300 <span class="marker">12</span></div>
+          <div class="canvas-hint">면 A 캔버스 = 일자와 동일하게 열 추가·칸 나누기·슬롯 편집. 오른쪽 점선 = 코너(면 B와 직각으로 만나는 경계).</div>
+        </div>
+        <div class="act-panel">
+          <div class="act-head"><span class="sel-name">면 A 편집 중</span><span class="deselect">칸 미선택</span></div>
+          <p class="act-hint" style="font-size:10.5px; color:var(--ink-faint); line-height:1.55; padding:0 2px;">두 면은 각각 따로 짠다 — <b>냉장고도 장도 양면 모두</b> 놓을 수 있음. 높이(2,300)는 두 면 공통이라 면을 바꿔도 세로 스케일이 같음. <span class="marker">13</span></p>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">완료</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 코너 케이스 C2: 면 B 작업 중 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 C2 — 코너(ㄴ) · 면 B로 전환<small>탭만 바꾸면 면 B 캔버스 · 미니맵도 면 B 강조</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장 (코너 ㄴ)</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="face-tabs">
+          <span class="face-tab">면 A · 가로 벽<span class="tagm">주 면</span><small>벽 1,800</small></span>
+          <span class="face-tab on">면 B · 세로 벽<span class="tagm sub">종속</span><small>벽 1,200</small></span>
+        </div>
+        <div class="minimap">
+          <div data-mini="B"></div>
+          <div class="mm-cap">지금 <b>면 B(세로 벽)</b> 작업 중. 면 B는 코너 쪽 끝에서 <b>면 A에 덮이므로</b> 면판이 벽 길이 그대로 끝남(가산 없음). <span class="marker">14</span></div>
+        </div>
+        <div class="canvas-card">
+          <div class="view-tabs">
+            <span class="view-tab on">정면</span>
+            <span class="view-tab">측면 (깊이)</span>
+          </div>
+          <div class="cab-outline">
+            <span class="corner-hatch" style="left:4px; width:20px;"><span class="ch-lab">면 A가<br>덮음</span></span>
+            <div class="colm" style="flex:1; margin-left:22px;">
+              <div class="cell" style="flex:1.2;"><span class="cell-tag">칸1 · 장</span>도어·양문</div>
+              <div class="cell sec-divider" style="flex:1;"><span class="cell-tag">칸2 · 장</span>오픈</div>
+            </div>
+          </div>
+          <div class="dim-row">
+            <span class="d" style="flex:0.18;">덮임</span><span class="d" style="flex:1;">1,200 장열</span>
+          </div>
+          <div class="dim-total">면 B 면판 1,200mm = 벽 1,200 그대로 · 높이 2,300 <span class="marker">15</span></div>
+          <div class="canvas-hint">면 B 캔버스도 열·칸·슬롯 편집 동일. 왼쪽 빗금 = 면 A가 바깥에서 덮는 코너 접합부.</div>
+        </div>
+        <div class="act-panel">
+          <div class="act-head"><span class="sel-name">면 B 편집 중</span><span class="deselect">칸 미선택</span></div>
+          <p class="act-hint" style="font-size:10.5px; color:var(--ink-faint); line-height:1.55; padding:0 2px;">면 B에 냉장고를 둘 수도 있음(양면 허용). 한 면에만 두는 게 일반적이라 예시는 면 A에 냉장고.</p>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">완료</span>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<div class="notes">
+  <h3>구성 원칙: 동작 = 참고 구현(LayoutEditor.tsx · fridgeData.ts) 그대로 / 명세에 없는 요소(가벽)만 제외 / 장 프리셋(케이스 2-2)은 v6 신규</h3>
+  <ol>
+    <li><span class="marker">1</span> 냉장고 위 상부장(장) 자동 배치 — 명세 비고. 높이는 자동 계산(전체 높이 − 냉장고 존 통일 기준). 상부장도 칸(장)이라 슬롯(도어/오픈)·내부 채움을 [슬롯 편집]으로 지정. "상부장"은 별도 요소가 아니라 맨 위에 있는 장을 가리키는 호칭. <b>색 규칙: 파랑=냉장고(및 여유공간), 초록=장 — 상부장도 장이므로 초록(요소 종류=색).</b></li>
+    <li><span class="marker">2</span> 냉장고 존: 좌/우/상단 여유공간을 색 띠로 시각화. 여유치수는 모델 선택 시 모델 기본값으로 채워지되 <b>실측자가 수정 가능</b>(설치 1대 = 좌·우·위 / 인접 냉장고 = 외곽·사이 규칙 기본값, fridgeData clearance·innerGapBetween 참고).</li>
+    <li><span class="marker">3</span> <b>구조 3단(v16)</b>: 열(column) → 칸(=장 하나) → 슬롯(도어/서랍/오픈). 열 경계 ＋로 열 추가(새 열=1칸 장), 칸 ＋로 한 열을 위·아래 칸(장)으로 나눔. <b>슬롯은 [슬롯 편집] 시트의 미니 레이아웃에서 ＋로 나눔</b>(v28부터 메인 캔버스에서 분리). 캔버스 표기: 선반=점선 / 레일선반=파란 점선 / 속서랍=초록 점선 / 서랍 슬롯=앞판 / 찬넬=주황 밴드(앞판 상부).</li>
+    <li><span class="marker">4</span> 열 경계 ＋ → 요소 선택 시트(케이스 2). 추가 요소는 냉장고/장 2종(가벽 제외). 명세의 "설치 대수 2대 이상" = 냉장고 열을 ＋로 추가하는 방식.</li>
+    <li><span class="marker">5</span> 치수 주석: 열별 폭(냉장고는 여유|기체|여유 3분할) + 전체 폭·높이. 외곽 치수는 2단계(T-1.2.2) 입력값 기준.</li>
+    <li><span class="marker">6</span> [완료]: 냉장고 1개 이상 배치 + 전체 폭 유효 → 패널 추출·합판 재단 최적화 → [T-1.1.1] 복귀(품목 "측정완료") — 명세 그대로.</li>
+    <li><span class="marker">7</span> 요소 선택 시트: 냉장고 / 장 — 참고 구현의 ElementTypeSheet에서 가벽 제외. <b>[장] 선택 시 빈 장 대신 장 프리셋 시트(케이스 2-2)로 분기</b>, [냉장고]는 모델 선택 시트(케이스 4)로.</li>
+    <li><span class="marker">8</span> 인접 냉장고 간격: 모델 조합 규칙 자동(Fit&amp;Max끼리 8mm, 빌트인 컨버터블 같은 방향 34/다른 방향 22mm 등 — fridgeData).</li>
+    <li><span class="marker">9</span> 나누기 — 가로 나누기 = 선택 칸 위/아래 ＋로 새 칸 삽입(칸이 작으면 ＋ 1개만), 세로 나누기 = 열 경계 ＋로 열 추가. 정확한 위치(mm)는 [크기 설정] 직접 지정으로.</li>
+    <li><span class="marker">A</span> 합치기 = 구분선 우측 × 탭으로 위·아래 칸 병합(둘 다 고정 높이면 합산, 아니면 자동).</li>
+    <li><span class="marker">B</span> 칸(장) 선택 시 패널 액션: [크기 설정]·[슬롯 편집](케이스 5) + 칸 단위 설정(바깥 면 트임·바닥 걸레받이/로청·상부 가림막·도어 색상). 냉장고 칸 = [모델 변경](케이스 4). <b>[슬롯 편집] 시트를 열면</b> 그 장의 미니 레이아웃이 나오고, <b>＋로 슬롯을 위·아래로 추가</b>·슬롯을 탭하면 그 슬롯의 종류(도어/서랍/오픈)·도어 방식·찬넬·내부 채움을 아래에서 편집(도어 찬넬은 슬롯별). 메인 캔버스에선 슬롯을 나누지 않음(v28).</li>
+    <li><span class="marker">C</span> <b>냉장고 라인 맞춤 토글은 제거(v33)</b> — 라인 맞춤은 "이 슬롯 하나"가 아니라 그 장 전체의 칸 정렬이라 토글로 두기 애매했음. 도어 높이 정렬은 프리셋(케이스 2-2)이 1탭으로 적용하는 것으로 충분하다고 보고 별도 수동 토글은 뺌. (자유 구성 시 수동 정렬 수단은 일단 없음 — 필요하면 추후 재검토.)</li>
+    <li><span class="marker">D</span> 열 단위 동작 — 열 순서 [◀▶] · [열 삭제](빨강, 같은 행 우측). 선택 해제(✕)는 패널 상단 헤더. 위계를 색으로 구분: 칸 편집=강조(파랑), 구조 동작=중립, 삭제=빨강. 마지막 열 삭제 시 기본 장 열 1개 자동 생성. [요소 변경](냉장고↔장 전환)은 제거 — 잘못 넣은 열은 삭제 후 ＋로 재추가(데이터가 어차피 초기화되어 실질 동일).</li>
+    <li><span class="marker">E</span> 냉장고 칸을 탭하면 액션 패널 "칸 편집" 그룹에 [모델 변경] 버튼이 뜨고(장 칸의 [슬롯 편집]·[크기 설정] 자리), 누르면 이 모델 선택 시트가 열림. 시트: <b>상단 브랜드 탭(LG / 삼성 / 기타)으로 목록 필터</b> + 컨버터블 손잡이(좌/우) + 치수 표시, LG·삼성 모델을 브랜드별로 묶음. 명세의 "브랜드(삼성/LG) 셀렉트"는 <b>브랜드 탭 필터</b>로 구체화 — 명세 동기화 필요. 모델 DB는 PRD 미결(fridgeData 활용 가능).</li>
+    <li><span class="marker">F</span> <b>여유공간(좌·우·위)은 냉장고 칸 패널에 상시 노출</b>되어 모델 선택 여부와 무관하게 바로 수정 가능. 모델 선택 = 폭·높이·깊이는 모델 값·여유는 모델 기본값으로 패널에 채움(수정 가능), 직접 입력 = 모델 변경 시트에서 폭·높이·깊이 수동(각 1–3,000mm)·여유는 패널에서 수동(0–500mm). 모델 변경 시트는 모델 선택/직접 입력 치수 전용이고, 여유 편집은 패널에서 한다(시트 재오픈 불필요). 2대 이상은 사이 간격이 모델 조합 규칙 기본값(직접 입력은 외곽·위만).</li>
+    <li><span class="marker">G</span> 슬롯 편집 시트(케이스 5): 슬롯 종류 도어 / 서랍 / 오픈 택1. 칸(장) 안에서 선택한 슬롯 1개 단위. 상부장 슬롯도 동일 시트.</li>
+    <li><span class="marker">G1</span> 도어·서랍 = 앞판 있음 → 깊이에서 앞판 두께 차감 + 앞판 상부 찬넬 대상. 오픈 = 앞판 없음 → 깊이 차감·찬넬 없음, 트임 가능.</li>
+    <li><span class="marker">G2</span> <b>내부 채움(도어·오픈 슬롯)</b>: 칸 개수만큼 행이 생기고 각 행을 일반 선반 / 레일 선반 / 속서랍 중 택1(섞기 가능). 서랍 슬롯은 서랍 자체라 내부 채움 없음.</li>
+    <li><span class="marker">G3</span> <b>속서랍은 도어 슬롯에서만</b> 선택 가능 — 오픈 슬롯은 가릴 도어가 없어 선반/레일선반만. 레일 선반 개수 제한 없음(보통 1개).</li>
+    <li><span class="marker">G4</span> <b>서랍 슬롯 = 전면 서랍 영역 1개</b>, 그 안의 단 수는 슬롯 속성(숫자)으로 정함(기본 균등 분할·단별 높이 개별 조정 가능). <b>[슬롯 편집] 시트의 ＋</b>는 종류가 다른 면(도어/서랍/오픈)을 나눌 때만 — 같은 서랍의 단 수는 ＋가 아니라 단 수 입력으로(일관성: ＋=면 분할, 숫자=같은 종류 안 세부). 도어 찬넬은 슬롯 편집에서 슬롯별로. 바닥(걸레받이/로청)·라인 맞춤·상부 가림막·도어 색상은 칸(장) 단위라 칸 패널(케이스 3)에서.</li>
+    <li><span class="marker">DM</span> <b>도어 방식(도어 슬롯만, v17 신규)</b>: 플랩(위로 들림) / 단문(한 짝 여닫이) / 양문(좌·우 두 짝). 서랍·오픈 슬롯엔 해당 없음. 찬넬·깊이 차감은 방식과 무관하게 동일.</li>
+    <li><span class="marker">DM1</span> <b>양문</b>은 좌우 폭 반반 고정·방향 자동(슬롯 가로 분할 불필요). 좌우 폭이 다르거나 한쪽만 서랍인 비대칭은 한 장이 아니라 <b>열을 따로</b> 두어 표현. 캔버스엔 양문 = 세로 점선(가운데 분할)로 표시.</li>
+    <li><span class="marker">DM2</span> <b>단문 경첩 방향(좌경/우경)</b>은 1차에서 입력(시공·도면에 영향). 경첩 방향 행은 단문일 때만 노출, 양문·플랩은 방향 입력 없음. 레이아웃엔 경첩 위치를 ◦◦(위·아래 한 쌍)으로 표시 — 단문=경첩 쪽 한 변, 양문=양쪽 변 각각, 플랩=상단.</li>
+    <li><span class="marker">SL</span> <b>[슬롯 편집] 시트 동작(v28~)</b>: 처음 열면 그 장이 <b>도어 1개</b>로 채워진 기본 상태. 시트 안 미니 레이아웃에서 <span style="color:var(--warn);font-weight:700;">＋</span>로 슬롯을 위·아래로 추가하고(메인 캔버스 ＋와 동일 동작), 슬롯을 탭하면 그 아래 옵션 영역이 선택한 슬롯의 종류·옵션으로 교체된다. 플랩은 보통 상단 칸에 둔다.</li>
+    <li><span class="marker">H</span> 캔버스 표기: 일반 선반=점선 / 레일선반=파란 점선 / 속서랍=초록 점선 / 서랍 슬롯=앞판 / 도어·서랍 앞판 상부 찬넬=주황 밴드. 로봇청소기·걸레받이는 측면 뷰에서.</li>
+    <li><span class="marker">H1</span> <b>바닥과 면한 칸(장)</b>: 칸이 바닥과 면할 때만 칸 패널에 [로봇청소기 자리] 토글 노출. 기본은 걸레받이(도어 높이 50mm 차감), 켜면 걸레받이 대신 로봇청소기(바닥판 없음·도어 바닥에서 150mm 띄움) — 둘은 택일. 칸 단위(슬롯 단위 아님).</li>
+    <li><span class="marker">O</span> <b>마감 설정 진입(전체) — 칸 미선택 시 패널 카드</b>: 칸을 아무것도 선택하지 않은 상태에서는 액션 패널 자리에 "🎨 마감 설정" 카드가 떠 전체 도어 색상을 지정한다(케이스 1). 칸을 선택하면 그 칸 편집 패널로 바뀐다 — "선택 안 함=전체 / 선택=그 칸"이 색상의 전체↔개별 구조와 일치.</li>
+    <li><span class="marker">O2</span> 전체 기본 도어 색을 바꾸면 "전체 따름" 칸만 따라 바뀌고, 개별 지정한 칸은 유지(칸 override 우선).</li>
+    <li><span class="marker">I</span> 크기 설정 시트: 열 폭(나머지 공간 채우기/직접 지정) + 칸 높이(자동/직접 지정 mm). 최소 칸 크기 제약은 명세 그대로.</li>
+    <li><span class="marker">J</span> 전체 폭 초과: 전체 치수 빨강 "▲ 합계mm (NNmm 초과)" + 경고 — 참고 구현 동작(명세에 추가 필요).</li>
+    <li><span class="marker">K</span> 장 폭 600mm 초과 경고 — 명세 정의(문구 임의, 확정 필요).</li>
+    <li><span class="marker">L</span> 에러 4종 — 명세 문구 그대로. "같은 크기의 인접한 칸끼리만 합칠 수 있습니다"는 참고 구현(제약 없는 병합)과 다름 — 제약 유지 여부 확정 필요.</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">뷰 탭(정면/측면) · 트임 (v14 신규)</h3>
+  <ol>
+    <li><span class="marker">V</span> <b>뷰 탭(정면 / 측면)</b>: 캔버스 상단에서 보는 방향을 전환. <b>정면</b> = 칸 배치(기존 캔버스, 케이스 1~8). <b>측면(깊이)</b> = 깊이 방향 단면(케이스 9). 정면도만으로 안 보이는 깊이·트임·로봇청소기 바닥 띄움·콘센트 보정을 측면에서 확인. 1차는 정면+측면 2종(평면도·3D는 추후).</li>
+    <li><span class="marker">V2</span> <b>측면 좌/우 토글</b>: 측면은 별도 탭을 늘리지 않고 단일 탭 안에서 [좌측에서 ↔ 우측에서] 토글로 보는 쪽을 전환. 냉장고장 측면은 보통 좌·우 대칭이라 기본 한쪽만 보고, 트임처럼 좌우가 다른 경우만 토글로 반대쪽 확인(방안 1). 탭 줄은 정면/측면 2개로 유지.</li>
+    <li><span class="marker">T1</span> <b>트임(명세 반영, v31 위치 변경)</b>: 트임은 슬롯이 아니라 <b>칸(장) 단위</b>라 칸 패널(케이스 3)에 [바깥 면 트임] 토글로 둔다(이전 케이스 5에서 이동). 그 장이 가장 바깥쪽(맨 왼/오른) 열일 때만 노출. 명세의 "오픈장은 측면 한쪽을 트는 것"을, 사용자가 좌/우를 고르는 게 아니라 <b>장 위치로 방향 자동</b>(맨 왼=좌·맨 오른=우)으로 구체화.</li>
+    <li><span class="marker">T2</span> 가운데 열(양옆에 다른 장)이면 트임 토글 미노출. <b>오픈 슬롯이 없는 칸에서 트임을 켜면 "오픈 슬롯 + 트임으로 진행합니다" 안내를 띄우고 그 칸을 오픈으로 전환</b>(새 칸 기본은 도어 1개라 도어인 경우가 많음). 트인 면은 측면 뷰에서 주황 칸으로 표시(케이스 9 W3).</li>
+    <li><span class="marker">W1</span> 측면 뷰 = <b>칸을 위→아래로 쌓고(높이), 가로로 깊이(앞=왼쪽·뒤=벽)</b>. 도어·서랍 슬롯은 앞쪽에 <b>앞판(파란 띠)</b> + 그 상부에 <b>찬넬(주황 밴드)</b>이 붙고, 앞판 두께만큼 몸통 깊이가 차감됨. (예: 600 → 578)</li>
+    <li><span class="marker">W2</span> 로봇청소기 칸: <b>장(몸통) 높이는 그대로</b> — 카르카스에 줄이는 선 없음(바닥판만 없음). <b>도어 앞판만 바닥에서 150mm 짧게</b> 그려 띄움을 표현(도어 하단에만 점선·틈, 몸통엔 가로선 긋지 않음). 콘센트 보정(뒤 30mm)은 몸통 우측 끝 빗금.</li>
+    <li><span class="marker">W3</span> 트임 = 오픈 슬롯의 바깥 면 개방. 측면 뷰에서 <b>주황 칸 + "↔ 트임(좌/우)" 뱃지 + 트인 쪽 화살표</b>로 강조. 오픈 슬롯은 앞판이 없어 깊이 차감·찬넬 없음.</li>
+    <li><span class="marker">W4</span> 측면 뷰는 조회·확인용(깊이·앞판·찬넬·트임·바닥 띄움). 1차에서 측면 뷰 직접 편집 범위는 확정 필요(명세 동기화). 좌/우 토글(V2)로 트임처럼 좌우 다른 경우 반대쪽 확인.</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">슬롯 모델 · 속서랍 · 찬넬 (v16 재설계)</h3>
+  <ol>
+    <li><span class="marker">S0</span> <b>용어 고정</b>: 열(column) = 세로 기둥(냉장고/장). 칸(cell) = 장 하나(한 열을 위·아래로 나눈 단위). 슬롯(slot) = 칸 안의 도어/서랍/오픈. 즉 칸이 슬롯을 담는 그릇. 한 칸의 장은 도어 슬롯·서랍 슬롯·오픈 슬롯을 위→아래로 조합(예: 도어 1 + 서랍 2단).</li>
+    <li><span class="marker">S1</span> <b>슬롯 종류 3가지</b>: 도어(여닫는 문) / 서랍(전면 서랍 영역, 단 수 N) / 오픈(앞 트임). v15의 "오픈형/선반/서랍/속서랍 택1"을 폐기하고, 앞쪽 구성을 슬롯 종류 조합으로 표현(도어만/서랍만/도어+서랍/오픈이 전부 조합으로 나옴).</li>
+    <li><span class="marker">S2</span> <b>내부 채움</b>: 도어·오픈 슬롯 내부를 일반 선반/레일 선반/속서랍 조합으로 채움. <b>속서랍은 도어 슬롯에서만</b>(오픈은 가릴 도어가 없음). 서랍 슬롯은 서랍 자체라 내부 채움 없음.</li>
+    <li><span class="marker">CH1</span> <b>찬넬(앞판 상부) = 슬롯 단위(v27 변경)</b>: 도어·서랍 앞판 상부에 들어가는 가로 부재(손잡이 홈 + 옆 냉장고 도어 높이 라인 맞춤). <b>적용·높이 모두 슬롯에서</b> — 도어 슬롯 = 슬롯 편집 시트(케이스 5)에서 [이 도어 앞판에 찬넬 적용] 토글 + 높이를 개별 입력(같은 칸 안 도어끼리 달라도 됨, 라인 맞춤 필요 시) / 서랍 슬롯 = 각 단 앞판 상부에 <b>항상 들어가며(끌 수 없음) 높이만 슬롯에서 설정</b>(v32) / 오픈 슬롯 = 앞판 없어 제외. (이전 v16~v26의 '칸 단위 1개' 방식에서 변경.) 캔버스엔 주황 밴드(서랍은 단마다).</li>
+    <li><span class="marker">CH3</span> <b>상부 가림막(현장 호칭도 '찬넬', 별개 부재)</b>: 위에서 보면 ㅁ자인 가로 부재로, 장과 장 사이(또는 장 위)에 들어가 옆 냉장고와 높이를 맞춘다. <b>입력 = 장 칸 패널(케이스 3)의 [상부 가림막] 토글(마커 TG)</b>, 켜면 높이는 냉장고와의 높이 차이만큼 자동 계산(별도 입력 없음). 앞판 상부 '찬넬'과는 다른 부재라 명세에서도 명칭 분리.</li>
+    <li><span class="marker">TG</span> <b>상부 가림막 토글(v24)</b>: 장 칸 패널에 노출. 옆 냉장고와 높이를 맞추는 실제 채움 부재(높이는 냉장고 높이 차이만큼 자동). 도어 높이 정렬(라인 맞춤)은 프리셋으로 따로 적용 — 상부 가림막은 그와 별개의 물리 부재.</li>
+    <li><span class="marker">AB</span> <b>앞밴드 유무 토글(v24)</b>: 냉장고 칸 패널(케이스 4)에 노출. 냉장고장 앞면 가림막(세로·가로). 1차엔 유무만 — 켜면 작업지시서에 "있음" 노출, 상세 재단·치수는 추후.</li>
+    <li><span class="marker">S3</span> <b>깊이 차감·바닥</b>: 도어/서랍 앞판이 있으면 그 깊이만큼 차감(측면 뷰에서 확인). 바닥과 면한 칸은 걸레받이(기본·도어 50mm 차감) ↔ 로봇청소기(바닥판 없음·150mm 띄움) 택일, 칸 단위.</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">마감 설정 — 색상 콤보박스 (케이스 8 · 케이스 3 패널 · v13)</h3>
+  <ol>
+    <li><span class="marker">M</span> 칸 액션 패널 "마감" 행: 선택한 칸의 <b>도어 색상</b>을 보여준다. 기본은 "전체 따름"(점선 콤보박스) — 누르면 케이스 8 시트가 열려 그 칸만 개별 색으로 덮어쓸 수 있다. 개별 지정된 칸이면 [전체로 되돌리기]로 다시 전체 기본값을 따르게 한다.</li>
+    <li><span class="marker">N</span> 마감 설정 시트: 색상은 <b>콤보박스</b>(입력창에 타이핑하면 목록이 실시간 필터링 + 선택)로 받는다. <b>목록에 있는 색만 선택 가능</b>(자유 입력 불가). 도어 색상·홈바 색상은 <b>같은 색상 목록을 공유</b>한다. 색상 목록 값은 추후 운영에서 제공(코드 상수). <b>진입은 두 곳</b>: 칸 미선택 시 패널의 [🎨 마감 설정] 카드(전체 도어 색상, 마커 O) + 칸 선택 후 패널 "마감" 행 콤보(그 칸만 override, 마커 M). 오픈장 칸이면 홈바 색상 항목도 함께.</li>
+    <li><span class="marker">N1</span> 도어 색상 — 전체 기본값: 마감 설정에서 한 번 지정하면 모든 장 도어의 기본 색이 된다.</li>
+    <li><span class="marker">N2</span> 전체 기본값을 바꾸면 "전체 따름" 칸만 따라 바뀌고, 칸에서 개별 지정한 색은 유지된다(칸 override 우선).</li>
+    <li><span class="marker">N3</span> 홈바 색상 — 오픈장 칸에서 직접 지정: 별도 전체 기본값을 두지 않고, <b>오픈장 칸을 선택했을 때만</b> 이 칸의 홈바 색상을 시트에서 지정한다(도어 색상과 같은 콤보박스·같은 목록).</li>
+    <li><span class="marker">N4</span> 오픈장이 아닌 칸에는 홈바 색상 항목이 표시되지 않는다. (명세 T-1.2.3 "마감 설정" 반영 완료 — 색상 목록 값만 추후 제공.)</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">냉장고 모델 시트 — 브랜드 탭 (케이스 4-2 · v37 신규)</h3>
+  <ol>
+    <li><span class="marker">E</span> 모델 시트 상단에 <b>브랜드 탭(LG / 삼성 / 기타)</b>을 두고, 탭을 누르면 해당 브랜드 모델만 목록에 표시(다른 브랜드는 숨김). 기본 선택 = LG. <b>[직접 입력]은 브랜드와 무관하게 항상 노출</b>(탭 아래 고정). 명세의 "브랜드(삼성/LG) 셀렉트"를 셀렉트 박스가 아니라 <b>상단 탭 필터</b>로 구체화 — 명세 동기화 필요. 현재 기타 탭은 등록 모델이 없어 빈 상태 안내만 표시(직접 입력 유도).</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">장 프리셋 — 게이트(등분) 방식 (케이스 2-2 · v7)</h3>
+  <ol>
+    <li><span class="marker">P1</span> 진입: 케이스 2(요소 선택)에서 [장]을 누르면 이 시트. 상단 게이트(1·2·3·4등분·자유구성)로 칸 수를 먼저 고르면 아래에 그 등분의 변형 카드만 표시 → 스크롤 없이 비교. 카드 1장 = 장 1열 통째 생성. 도어 명칭은 도어 있는 칸만 위→아래 D1·D2·D3.</li>
+    <li><span class="marker">P2</span> 1등분 → 1도어(선반 2단) 1장. 유일하게 칸 속까지 정해진 프리셋(나머지는 분할만, 슬롯·속은 적용 후 [슬롯 편집]에서).</li>
+    <li><span class="marker">P3</span> 2등분 → 균등 / 상부 맞춤(D1=상부장 라인) / 하부 맞춤(D2=냉장고 하단 라인) 3장.</li>
+    <li><span class="marker">P4</span> 4등분 → 변형 추후 직접 채움(예약). 게이트 칸은 두되 변형 카드는 비워둠.</li>
+    <li><span class="marker">P5</span> 3등분 → 균등 / 상하 맞춤(D1=상부장·D3=냉장고 하단) / 홈바형 3장.</li>
+    <li><span class="marker">P6</span> 홈바형 → 칸은 3등분인데 가운데 도어 없이 오픈. 도어 개수가 아니라 등분(칸 수)으로 묶이므로 3등분에 속함. 도어는 위·아래 D1·D2.</li>
+    <li><span class="marker">P7</span> 자유구성 → 게이트에서 누르면 변형 카드 없이 바로 빈 장 1열 삽입(기존 동작).</li>
+    <li><span class="marker">P8</span> 정렬 기준선(파란 점선): 냉장고 모델 데이터(fridgeData)의 도어 분할 높이를 사용. 냉장고 없음·분할 정보 없는 모델이면 균등 등 대략 분할로 폴백 — 적용 후 칸 추가·속·크기 조정 가능(프리셋은 출발점).</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 명세 동기화 필요 항목 (확정 후 명세 반영)</h3>
+  <ol>
+    <li>냉장고 설정 입력 방식: <b>모델 목록 + 브랜드 탭(LG/삼성/기타) 필터</b> + 냉장고 열 추가. <b>여유치수(여유공간)는 냉장고 칸 패널에 상시 노출</b>해 모델 변경 시트를 안 열어도 바로 수정(케이스 4·v22). 모델 선택 시 모델 기본값으로 채움, 직접 입력 시 폭·높이·깊이는 시트에서·여유는 패널에서 수동(좌·우·위, 0–500mm). 2대 이상은 사이 간격이 모델 조합 규칙 기본값. 명세 여유치수 행에 "냉장고 칸 패널에서 상시 수정" 반영 완료. <b>브랜드 셀렉트 → 브랜드 탭으로 변경(v37) 반영 필요.</b></li>
+    <li>용도 설정(5종 잠정 분류) → 요소(냉장고/장) × 내부 구성(오픈형/선반/서랍)으로 변경. 가전·빈 공간 처리 방식 결정.</li>
+    <li>나누기: "가로/세로 분할 위치 mm 입력" → 가로 = 칸 ＋ 삽입, 세로 = 열 ＋ 추가(+크기 설정 mm 직접 지정) / 합치기(인접·동일 크기 제약) → 구분선 × 병합(제약 유지 여부).</li>
+    <li>열 단위 편집(추가/순서 이동/삭제/폭 채우기·직접 지정), 전체 폭 초과 검증·경고 — 명세에 신규 추가. [요소 변경](냉장고↔장 전환)은 1차 제외(삭제 후 재추가로 대체).</li>
+    <li><b>장 프리셋(게이트/등분 방식)</b> — 신규 기능(참고 구현 LayoutEditor에 없음). 케이스 2-2 게이트: 1등분(1도어) / 2등분(균등·상부 맞춤·하부 맞춤) / 3등분(균등·상하 맞춤·홈바형) / 4등분(추후 직접 채움) / 자유구성(바로 빈 장). 도어 정렬은 냉장고 도어 분할 높이 기준, 칸 속 기본값은 추후(1도어 제외). 도어 명칭 D1·D2·D3(도어 있는 칸만)을 캔버스 칸에도 표기.</li>
+    <li><b>정면/측면 뷰 탭</b> — 신규. 1차는 정면+측면(깊이) 2D 2종, 평면도·3D는 추후. 측면 뷰에서의 편집 가능 범위(조회 전용 vs 깊이 직접 수정) 확정 필요.</li>
+    <li><b>트임</b> — 명세는 "오픈장 측면 한쪽" 한 줄. 와이어프레임에서 [바깥 면 트임] 토글(오픈장+바깥쪽 열일 때만, 방향은 장 위치로 자동) + 측면 뷰 점선 표시. 명세에 "오픈장+바깥쪽 한정·방향 자동" 반영 필요.</li>
+    <li><b>구조 모델(열·칸·슬롯)</b> — v16에서 칸 내부를 "오픈형/선반/서랍 택1"에서 <b>슬롯(도어/서랍/오픈) 조합</b>으로 재정의. 명세 "장 내부 구성 UI"를 슬롯 모델로 재서술 필요(칸=장, 슬롯=도어/서랍/오픈, 내부 채움=선반/레일선반/속서랍).</li>
+    <li><b>도어 방식(v17)</b> — 도어 슬롯에 플랩 / 단문 / 양문 방식 추가, 단문은 경첩 방향(좌/우) 입력. 명세 T-1.2.3에 도어 방식·경첩 방향 필드 추가 필요. 양문은 좌우 폭 반반·방향 자동, 비대칭 좌우는 열 분리로 처리한다는 규칙도 함께.</li>
+    <li><b>서랍 단 수(v18)</b> — 서랍 슬롯을 "1슬롯=1단"에서 "전면 서랍 영역 1개 + 단 수 N(기본 균등 분할·단별 높이 개별 조정)"으로 변경. 명세 T-1.2.3에 서랍 단 수·단 높이(균등/개별) 규칙 추가, ＋는 종류 다른 면 분할에만 쓴다는 조작 원칙도 반영.</li>
+    <li><b>속서랍</b> — 신규. 도어 슬롯 내부 채움의 한 종류(오픈 슬롯엔 불가). 명세 장 옵션(서랍/선반/레일선반/로봇청소기)에 '속서랍(도어 뒤 서랍)' 추가. 도어 두께만큼 깊이 차감 등 재단 규칙 확정 필요.</li>
+    <li><b>찬넬(앞판 상부) vs 상부 가림막 명칭 정리</b> — 현장에서 둘 다 '찬넬'로 부르나 부재가 다름. 앞판 상부 찬넬 = 도어·서랍 앞판 상부 가로 부재. <b>v27부터 슬롯 단위</b>: 도어는 슬롯 편집(케이스 5)에서 적용 토글+높이 개별, 서랍은 각 단 자동, 오픈 제외(이전 칸 단위 1개에서 변경). <b>상부 가림막(ㅁ자)</b> = 장과 장 사이/장 위에 들어가 옆 냉장고와 높이 맞추는 부재 — 입력은 장 칸 패널 [상부 가림막] 토글, 높이는 냉장고 차이만큼 자동(v24). <b>앞밴드(가림막)</b> = 냉장고장 앞면 가림막, 냉장고 칸 패널 [앞밴드 있음] 유무 토글, 1차엔 유무만(v24). 셋 다 명세 T-1.2.3에 반영 필요.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>참고 구현의 가벽 요소는 명세에 없어 제외.</li>
+    <li>라인 맞춤 토글의 액션 바 배치, 캔버스 초기 자동 생성 구성(장 2칸)·치수 값·모델명은 임의/가상 예시.</li>
+    <li>2대 이상 캔버스(냉장고 2열 + 사이 간격) 케이스는 미작성 — 필요 시 추가.</li>
+    <li>프리셋 카드 썸네일의 도어 비율·선반 위치, 파란 점선 정렬 표기, 빗금 오픈 표현, 게이트 세그먼트(등분) 배치·카드 라벨 문구는 개념 전달용 임의 시각화. 4등분 변형은 예약(미작성). 케이스 2-2는 게이트 전환을 보이기 위해 2등분(ⓐ)·3등분(ⓑ) 두 상태로 그림.</li>
+    <li><b>브랜드 탭의 모델 분류(LG/삼성/기타)와 기타 빈 상태 문구는 개념 전달용 임의 시각화</b> — 실제 모델 DB·브랜드 분류는 운영에서 제공.</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">코너(ㄴ) 레이아웃 — 면 전환 방식 (케이스 C1~C2 · v38)</h3>
+  <ol>
+    <li><span class="marker">10</span> 코너(ㄴ)일 때만 캔버스 위에 <b>면 전환 탭</b>이 생긴다 — [면 A · 가로 벽] [면 B · 세로 벽]. 일자는 이 탭 없이 단일 캔버스. 한 번에 한 면을 작업하고(모바일에서 두 면 동시 표시는 각 면이 작아져 편집이 불편), 두 면 관계는 코너 미니맵으로 보조.</li>
+    <li><span class="marker">11</span> <b>코너 미니맵</b>: 위에서 본 ㄴ자 평면. 지금 보고 있는 면을 파랑으로 강조. 주 면(A)이 코너를 끝까지 차지하고 종속 면(B)을 바깥에서 감싸는 관계를 보여줌.</li>
+    <li><span class="marker">12</span> 면 A는 <b>주 면</b>이라 면판 길이 = 벽 A 길이 + 면 B 깊이(2단계에서 정한 주 면 지정·두 벽 길이가 넘어옴). 캔버스 전체 폭은 이 면판 길이. 오른쪽 점선이 코너(면 B와 만나는 경계).</li>
+    <li><span class="marker">13</span> <b>양면 허용</b>: 면 A·면 B 모두 냉장고도 장도 놓을 수 있고, 각 면 안에서 독립적으로 열·칸·슬롯을 짠다. <b>높이(전체·서라운드전)는 두 면 공통</b>(2단계 입력)이라 면을 바꿔도 세로 스케일이 같다.</li>
+    <li><span class="marker">14</span> 면 B 탭으로 바꾸면 면 B 캔버스 + 미니맵 면 B 강조로 전환. <b>한 면 안의 편집 UI(열 추가·칸 나누기·슬롯 편집·측면 뷰·마감·모델 변경 등)는 케이스 1~9와 100% 동일.</b></li>
+    <li><span class="marker">15</span> 면 B는 <b>종속 면</b>이라 면판 길이 = 벽 B 길이 그대로(가산 없음). 코너 쪽 끝은 면 A가 바깥에서 덮으므로 그만큼 물러나지 않고 그대로 끝난다.</li>
+    <li><b>면판 길이 규칙(감쌈 ㄴ)</b>: 주 면 = 벽 길이 + 종속 면 깊이 / 종속 면 = 벽 길이 그대로. 측정 벽 길이는 그대로 두고 재단 면판만 가산(각도 90° 고정). <b>시스템이 자동 계산하므로 기사가 확인·조작할 화면은 두지 않는다</b>(이전 C3 화면 제거). 안쪽 ㄱ자는 1차 제외 — 싱크대 작업 때 데드 스페이스 처리와 함께.</li>
+    <li><b>완료 시 작업지시서</b>: 코너 품목은 <b>면별 정면도 2장</b>(면 A·면 B) + <b>평면도 1장</b>(ㄴ자 배치·주 면/종속 면·맞댐 관계), 본체 합판 재단도는 두 면 품목 합산 산출. 이는 레이아웃 편집 화면이 아니라 작업지시서(A-2.3) 명세 사항.</li>
+  </ol>
+
+  <h3 style="margin-top:16px;">코너 — 1차 범위에서 뺀 것 · 명세 동기화</h3>
+  <ol>
+    <li><b>안쪽(ㄱ자) 코너 제외</b>: 가구가 벽 안쪽으로 들어가는 형태는 냉장고장에선 잘 쓰지 않아 1차 제외. 2단계(T-1.2.2) 프리셋도 일자 + 코너(ㄴ) 좌·우 3개로 줄임. 안쪽 코너는 싱크대 작업 시 데드 스페이스(채움판·코너 회전 철물)와 함께 설계.</li>
+    <li><b>데드 스페이스/채움판 제외</b>: 감쌈(ㄴ)은 주 면이 종속 면을 바깥에서 덮는 구조라 안쪽 구석 데드 스페이스 문제가 작다. 코너 접합 채움판·도어 간섭 검사·코너 전용 철물은 1차에서 다루지 않음.</li>
+    <li><b>명세 동기화 필요</b>: T-1.2.3에 코너 분기 추가 — 면 전환 탭(면 A·면 B), 양면 허용, 면별 캔버스(폭 = 면판 길이), 코너 미니맵, 높이 두 면 공통, 면 안 편집은 기존 동일. 작업지시서(A-2.3): 코너 품목 = 면별 정면도 2장 + 평면도 1장. 면판 규칙(주 면 = 벽 + 종속 깊이, 종속 = 벽 그대로)은 데이터 모델/재단 계산에 반영.</li>
+    <li><b>임의 표현</b>: 벽 길이(1,800·1,200)·깊이(590)·높이(2,300)·배치(면 A 냉장고+장, 면 B 장)·미니맵 비율·코너 경계 점선·접합부 빗금은 개념 전달용 예시. 면 탭 라벨(가로/세로 벽), 주 면/종속 태그는 2단계 주 면 지정 결과를 따름.</li>
+  </ol>
+</div>
+
+<script>
+(function () {
+  var tabs = document.getElementById('brandTabs');
+  if (!tabs) return;
+  var list = document.getElementById('brandList');
+  var empty = document.getElementById('brandEmpty');
+  var opts = list.querySelectorAll('.opt[data-brand]');
+  tabs.querySelectorAll('.brand-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.querySelectorAll('.brand-tab').forEach(function (t) { t.classList.remove('on'); });
+      tab.classList.add('on');
+      var brand = tab.getAttribute('data-brand');
+      var shown = 0;
+      opts.forEach(function (o) {
+        var match = o.getAttribute('data-brand') === brand;
+        o.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      if (empty) empty.style.display = shown === 0 ? '' : 'none';
+    });
+  });
+})();
+
+// 코너(ㄴ) 미니맵 SVG — v38
+var NIEUN = { wallH: { x1: 30, x2: 80, y: 62 }, wallV: { x: 30, y1: 22, y2: 62 }, bandH: { x: 17, y: 62, w: 63, h: 13 }, bandV: { x: 17, y: 22, w: 13, h: 53 } };
+function cutNieun(primary) {
+  var g = NIEUN, DEPTH = 13;
+  var H = { x: g.bandH.x, y: g.bandH.y, w: g.bandH.w, h: g.bandH.h };
+  var V = { x: g.bandV.x, y: g.bandV.y, w: g.bandV.w, h: g.bandV.h };
+  if (primary === 'A') { V.h -= DEPTH; } else { H.x += DEPTH; H.w -= DEPTH; }
+  return { H: H, V: V };
+}
+function lnC(x1, y1, x2, y2, c, w) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round"/>'; }
+function cornerSvg(active, size) {
+  var g = NIEUN, c = cutNieun('A');
+  var aOn = active === 'A', bOn = active === 'B';
+  var aFill = aOn ? 'var(--accent-bg)' : '#f3f2ec';
+  var aStroke = aOn ? 'var(--accent)' : 'var(--ink-faint)';
+  var bFill = bOn ? 'var(--accent-bg)' : '#f3f2ec';
+  var bStroke = bOn ? 'var(--accent)' : 'var(--ink-faint)';
+  var aTx = aOn ? 'var(--accent)' : 'var(--ink-soft)';
+  var bTx = bOn ? 'var(--accent)' : 'var(--ink-soft)';
+  function band(b, face, fill, stroke, tx) {
+    return '<rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="1.5" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.6" stroke-dasharray="3 2.5"/>'
+      + '<text x="' + (b.x + b.w / 2) + '" y="' + (b.y + b.h / 2 + 3) + '" text-anchor="middle" font-size="8" font-weight="700" fill="' + tx + '">' + face + '</text>';
+  }
+  return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '">'
+    + band(c.H, 'A', aFill, aStroke, aTx)
+    + band(c.V, 'B', bFill, bStroke, bTx)
+    + lnC(g.wallH.x1, g.wallH.y, g.wallH.x2, g.wallH.y, 'var(--ink)', 5)
+    + lnC(g.wallV.x, g.wallV.y1, g.wallV.x, g.wallV.y2, 'var(--ink)', 5)
+    + '</svg>';
+}
+window.addEventListener('DOMContentLoaded', function () {
+  [].forEach.call(document.querySelectorAll('[data-mini]'), function (el) {
+    el.innerHTML = cornerSvg(el.getAttribute('data-mini'), 52);
+  });
+});
+</script>
+
+</body>
+</html>

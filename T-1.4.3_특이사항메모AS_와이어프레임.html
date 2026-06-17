@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.4.3 특이사항·메모·AS (시공 위저드 3단계) — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1640px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .stage { max-width: 1640px; margin: 0 auto; display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; max-width: 360px; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+  .phone { width: 360px; height: 780px; background: #f3f2ee; border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 8px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; background: var(--surface); }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-header .item-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 3px 10px; }
+  .stepper { display: flex; align-items: center; justify-content: center; padding: 6px 30px 10px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 76px; }
+  .step .dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--ink-faint); background: var(--surface); }
+  .step.done .dot { border-color: var(--accent); color: var(--accent); }
+  .step.cur .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step .lb { font-size: 9.5px; color: var(--ink-faint); }
+  .step.cur .lb { color: var(--accent); font-weight: 700; }
+  .step-line { flex: 1; height: 1.5px; background: var(--line-soft); margin-bottom: 13px; max-width: 30px; }
+  .p-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surface); border-radius: 14px; padding: 12px 14px; }
+  .card h6 { font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .card h6 .req { color: var(--error); }
+  .card h6 .opt { font-weight: 400; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ph { aspect-ratio: 1; background: linear-gradient(135deg, #e2e0d8, #cfccc2); border-radius: 10px; position: relative; }
+  .ph .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 1px solid #fca5a5; color: #f87171; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .add-btn { aspect-ratio: 1; border: 1.5px dashed var(--line); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--ink-faint); font-size: 10px; background: var(--paper); }
+  .add-btn .plus { font-size: 20px; line-height: 1; }
+  .memo { border: 1.5px solid var(--line); border-radius: 11px; background: var(--paper); padding: 10px 11px; font-size: 12px; line-height: 1.7; min-height: 96px; color: var(--ink); }
+  .memo.empty { color: var(--ink-faint); }
+  .memo.err { border-color: var(--error); background: #fff7f7; }
+  .char-cnt { text-align: right; font-size: 10px; color: var(--ink-faint); margin-top: 4px; }
+  .field-err { font-size: 10.5px; color: var(--error); margin-top: 6px; }
+  .chk-row { display: flex; align-items: flex-start; gap: 9px; }
+  .chk { width: 19px; height: 19px; border-radius: 5px; border: 1.5px solid var(--line); background: var(--surface); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .chk.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chk-row .tx { font-size: 12.5px; font-weight: 600; }
+  .chk-row .tx small { display: block; font-size: 10px; font-weight: 400; color: var(--ink-faint); margin-top: 2px; line-height: 1.6; }
+  .warn-band { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; border-radius: 11px; padding: 8px 12px; font-size: 11px; line-height: 1.6; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+  .p-footer { padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; background: var(--surface); }
+  .p-btn { flex: 1; text-align: center; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+  .p-btn.dim { opacity: 0.35; }
+  .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+  .modal { background: var(--surface); border-radius: 16px; padding: 20px 18px 16px; width: 100%; }
+  .modal h5 { font-size: 14.5px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+  .modal .btns { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .btns span { flex: 1; text-align: center; font-size: 12.5px; padding: 11px 0; border-radius: 10px; font-weight: 600; }
+  .modal .btns .ghost { background: var(--paper); color: var(--ink-soft); }
+  .modal .btns .primary { background: var(--accent); color: #fff; }
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1640px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>T-1.4.3 특이사항·메모·AS <small>시공 위저드 3/3 단계 / 시공 기사 / 모바일 웹·PWA / 케이스 4종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본<small>특이사항 사진(선택) + 시공 메모(필수) + AS 필요 체크</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 시공 작업 <span class="item-tag">시공 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 전 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">특이사항·메모</span></div>
+      </div>
+      <div class="p-body">
+        <div class="card">
+          <h6>특이사항 사진 <span class="opt">(선택)</span> <span class="marker">1</span></h6>
+          <div class="photo-grid">
+            <div class="ph"><span class="del">×</span></div>
+            <div class="add-btn"><span class="plus">＋</span>사진 추가</div>
+          </div>
+        </div>
+        <div class="card">
+          <h6>시공 메모 <span class="req">*</span> <span class="marker">2</span></h6>
+          <div class="memo">상부장·하부장 시공 완료. 우측 벽 단차로 좌측 마감재 5mm 보강. 싱크대 쪽 도어 1개 경첩 유격 있음 — AS 필요 부위: 우측 하부장 도어 경첩.</div>
+          <div class="char-cnt">128 / 1,000자</div>
+        </div>
+        <div class="card">
+          <div class="chk-row">
+            <span class="chk on">✓</span>
+            <span class="tx">AS 필요 <span class="marker">3</span><small>체크 시 어느 부위인지 시공 메모에 함께 기재해주세요. AS 접수·처리는 추후 기능으로, 1차에서는 필요 여부만 기록됩니다.</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">저장 <span class="marker" style="background:#fff;color:var(--ink);">4</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 유효성 에러 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 유효성 에러<small>메모 미입력 → [저장] 비활성 + 에러</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 시공 작업 <span class="item-tag">시공 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 전 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">3</span><span class="lb">특이사항·메모</span></div>
+      </div>
+      <div class="p-body">
+        <div class="card">
+          <h6>특이사항 사진 <span class="opt">(선택)</span></h6>
+          <div class="photo-grid"><div class="add-btn"><span class="plus">＋</span>사진 추가</div></div>
+        </div>
+        <div class="card">
+          <h6>시공 메모 <span class="req">*</span></h6>
+          <div class="memo empty err">시공 내용·특이사항을 입력해주세요 (1–1,000자)</div>
+          <p class="field-err">시공 메모를 입력해주세요. <span class="marker">5</span></p>
+        </div>
+        <div class="card">
+          <div class="chk-row"><span class="chk"></span><span class="tx">AS 필요</span></div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn dim">저장 <span class="marker" style="background:#fff;color:var(--ink);">6</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 취소 확인 모달 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 취소 확인 모달<small>위저드 공통: 입력 내용 있을 때 이탈</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 시공 작업 <span class="item-tag">시공 중: 냉장고장</span></div>
+      <div class="p-body" style="opacity:0.35;">
+        <div class="card"><h6>시공 메모 *</h6><div class="memo">상부장·하부장 시공 완료...</div></div>
+      </div>
+      <div class="modal-overlay">
+        <div class="modal">
+          <h5>시공 입력을 중단하시겠습니까? <span class="marker">7</span></h5>
+          <p>지금까지 입력한 내용은 임시 저장되며, 주문 상세에서 <b>[이어서 (3/3)]</b>으로 마지막 단계부터 다시 시작할 수 있습니다.</p>
+          <div class="btns"><span class="ghost">계속 입력</span><span class="primary">나가기</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 저장 에러 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 4 — 에러<small>저장 실패 등 토스트</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-body" style="gap:8px; padding:16px 12px;">
+        <div class="warn-band">ℹ [저장] 시 이 품목이 <b>"시공완료"</b>로 표시되고 [T-1.1.1 주문 상세]로 복귀합니다. 모든 품목이 시공완료되면 주문 단위 [시공 완료] 버튼이 활성화됩니다. <span class="marker">8</span></div>
+        <div class="toast">⚠ 시공 메모를 입력해주세요. <span class="marker" style="margin-left:auto;">9</span></div>
+        <div class="toast">⚠ 시공 완료 사진을 1장 이상 업로드해주세요.</div>
+        <div class="toast">⚠ 사진은 장당 10MB 이하, 분류별 최대 30장까지 업로드할 수 있습니다.</div>
+        <div class="toast">⚠ 저장에 실패했습니다. 잠시 후 다시 시도해주세요.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.4 · T-1.4.3 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 특이사항 사진: 선택. 분류 "시공 특이사항"으로 해당 품목에 저장. 장당 10MB·분류별 30장·JPG/PNG/HEIC.</li>
+    <li><span class="marker">2</span> 시공 메모: 필수, 1–1,000자. 시공 내용·특이사항을 함께 기록.</li>
+    <li><span class="marker">3</span> AS 필요: 체크박스, 선택(기본 미체크). AS 필요 시 어느 부위인지 시공 메모에 기재(명세 비고). "AS 완료"·AS 처리 프로세스는 1차 범위 아님(추후, 기사 재배정).</li>
+    <li><span class="marker">4</span> [저장] 활성 조건: 시공 메모 입력 + 2단계 시공 완료 사진 1장 이상 → 해당 품목 시공 정보 저장 → 품목 "시공완료" 처리 → [T-1.1.1 주문 상세] 복귀.</li>
+    <li><span class="marker">5</span> "시공 메모를 입력해주세요." — 명세 문구 그대로.</li>
+    <li><span class="marker">6</span> 조건 미충족 시 [저장] 비활성.</li>
+    <li><span class="marker">7</span> [취소]: 입력 내용 있으면 확인 모달 후 주문 상세 복귀 — 임시 저장(draft)분 유지, 재진입 시 [이어서 (n/N)]로 마지막 단계부터 재개(1차 포함). 모달은 위저드 1~3단계 공통.</li>
+    <li><span class="marker">8</span> 주문 단위 완료 판정: 모든 품목 시공완료 시 [T-1.1.1]의 [시공 완료] 활성 — 명세 그대로(안내 배너 자체는 임의).</li>
+    <li><span class="marker">9</span> 에러 4종: 시공 메모 / 시공 완료 사진 / 사진 용량·장수 / 저장 실패 — 명세 문구 그대로.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>취소 모달 문구·버튼명("계속 입력"/"나가기"), AS 체크 하단 보조 설명, 시공완료 안내 배너, 메모 placeholder·글자 수 카운터는 임의 — 확정 필요.</li>
+    <li>메모 예시 텍스트·사진 구성은 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

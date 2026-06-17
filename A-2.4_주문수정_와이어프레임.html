@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-2.4 주문 수정 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1180px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .case-label { max-width: 1180px; margin: 36px auto 10px; font-size: 14px; font-weight: 700; }
+  .case-label small { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; margin-left: 8px; }
+
+  .screen { max-width: 1180px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; }
+  .gnb { width: 188px; flex-shrink: 0; border-right: 1px solid var(--line-soft); padding: 18px 12px; font-size: 13px; }
+  .gnb .logo { font-size: 15px; font-weight: 700; padding: 4px 10px 18px; }
+  .gnb .item { padding: 8px 10px; border-radius: 6px; color: var(--ink-soft); margin-bottom: 2px; }
+  .gnb .item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; min-width: 0; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  .profile-chip { font-size: 12.5px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; background: var(--surface); }
+  .page-head { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .page-head h2 { font-size: 18px; font-weight: 700; }
+  .crumb { font-size: 12.5px; color: var(--ink-faint); }
+
+  .btn { font-size: 13px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: default; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+
+  .section { border: 1px solid var(--line-soft); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .section h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; color: var(--ink-soft); }
+  .field label .req { color: var(--error); }
+  .field label .opt { color: var(--ink-faint); font-size: 11px; }
+  .input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink-faint); min-height: 36px; display: flex; align-items: center; }
+  .input.filled { color: var(--ink); }
+  .input.readonly { background: var(--paper); }
+  .input.area { min-height: 64px; align-items: flex-start; }
+  .input-row { display: flex; gap: 8px; }
+  .input-row .input { flex: 1; }
+  .hint { font-size: 11.5px; color: var(--ink-faint); }
+  .lock-msg { font-size: 11.5px; color: var(--error); }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .check.locked { color: #c4c2ba; }
+  .check-group { display: flex; gap: 16px; flex-wrap: wrap; }
+  .box { width: 15px; height: 15px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .box.lock { background: var(--paper); border-color: var(--line-soft); color: var(--ink-faint); }
+  .caret { font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+
+  .thumbs { display: flex; gap: 8px; }
+  .thumb { width: 64px; height: 64px; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--paper); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 18px; position: relative; }
+  .thumb .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .thumb.add { border-style: dashed; font-size: 13px; }
+
+  .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+  .toast.err { background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+  .toast.ok { background: #eaf3de; color: #3b6d11; border: 1px solid #cfe3b4; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1180px; margin: 28px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  @media (max-width: 860px) {
+    .screen { flex-direction: column; }
+    .gnb { width: 100%; border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 시공범위 다품목(A-2.2 동일 폼) 반영</div>
+  <h1>A-2.4 주문 수정 <small>관리자 / 데스크톱 웹 / 케이스 4종 · A-2.2와 동일 폼(기존 값 채워짐)</small></h1>
+</div>
+
+<!-- ───────── 케이스 1: 기본 (접수 단계 · 전체 수정 가능) ───────── -->
+<div class="case-label" style="margin-top:0;">케이스 1 — 기본 <small>접수 단계 · 기존 값 채워진 상태 · 전 필드 수정 가능</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item active">📋 주문 관리</div>
+    <div class="item">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="page-head"><h2>주문 수정 <span class="marker">1</span></h2></div>
+
+    <div class="section">
+      <h3>고객 정보</h3>
+      <div class="grid">
+        <div class="field">
+          <label>고객 이름 <span class="req">*</span></label>
+          <div class="input filled">이OO</div>
+        </div>
+        <div class="field">
+          <label>연락처 <span class="req">*</span></label>
+          <div class="input filled">010-2345-6789</div>
+        </div>
+        <div class="field full">
+          <label>우편번호 · 기본 주소 <span class="req">*</span></label>
+          <div class="input-row">
+            <div class="input readonly filled" style="max-width:120px;">07788</div>
+            <div class="input readonly filled">서울 강서구 OO길 8</div>
+            <button class="btn sm">주소 검색</button>
+            <button class="btn sm">직접 입력</button>
+          </div>
+        </div>
+        <div class="field full">
+          <label>상세 주소 <span class="opt">(선택)</span></label>
+          <div class="input filled">304호</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>현장·계약 정보</h3>
+      <div class="grid">
+        <div class="field full">
+          <label>시공범위 <span class="req">*</span> <span class="marker">2</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box on">✓</span> 냉장고장</span>
+            <span class="check"><span class="box on">✓</span> 붙박이장</span>
+            <span class="check"><span class="box"></span> 신발장</span>
+            <span class="check"><span class="box"></span> 싱크대</span>
+          </div>
+          <p class="hint">접수 단계에서는 여러 종류 추가·해제 가능(같은 종류는 1개씩)</p>
+        </div>
+        <div class="field">
+          <label>주문 경로 <span class="opt">(선택)</span></label>
+          <div class="input filled">인스타그램 <span class="caret">▾</span></div>
+        </div>
+        <div class="field">
+          <label>상담 경로 <span class="opt">(선택)</span></label>
+          <div class="input filled">카톡 <span class="caret">▾</span></div>
+        </div>
+        <div class="field">
+          <label>실측일 <span class="req">*</span></label>
+          <div class="input filled">2026-06-18 <span class="caret">📅</span></div>
+        </div>
+        <div class="field">
+          <label>계약금</label>
+          <div class="check"><span class="box on">✓</span> 계약금 있음</div>
+          <div class="input filled">50,000 원</div>
+        </div>
+        <div class="field">
+          <label>결제방법</label>
+          <div class="input filled">계좌이체 <span class="caret">▾</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>특이사항 <span style="font-weight:400; color:var(--ink-faint); font-size:11.5px;">(선택 · 기타 결제 시 필수)</span></h3>
+      <div class="field full">
+        <div class="input area filled">공동현관 #0304, 오전 방문 요청</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>사진 업로드 (고객 제공) <span class="marker">3</span></h3>
+      <div class="thumbs">
+        <div class="thumb">🖼<span class="del">✕</span></div>
+        <div class="thumb">🖼<span class="del">✕</span></div>
+        <div class="thumb add">＋ 추가</div>
+      </div>
+      <p class="hint" style="margin-top:8px;">기존 사진 조회·추가·삭제 가능 · JPG/PNG/HEIC · 장당 10MB · 최대 30장</p>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn">취소</button>
+      <button class="btn primary">저장 <span class="marker" style="background:#fff;color:var(--ink);">4</span></button>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 2: 시공범위 잠금 ───────── -->
+<div class="case-label">케이스 2 — 시공범위 잠금 <small>진행 상태 "실측 완료" 이후 · 현장·계약 정보 섹션만 발췌</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item active">📋 주문 관리</div>
+    <div class="item">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="page-head"><h2>주문 수정</h2><span class="crumb">실측 완료 단계 주문</span></div>
+
+    <div class="section">
+      <h3>현장·계약 정보</h3>
+      <div class="grid">
+        <div class="field full">
+          <label>시공범위 <span class="req">*</span> <span class="marker">5</span></label>
+          <div class="check-group">
+            <span class="check locked"><span class="box lock">✓</span> 냉장고장</span>
+            <span class="check locked"><span class="box lock">✓</span> 붙박이장</span>
+            <span class="check locked"><span class="box lock"></span> 신발장</span>
+            <span class="check locked"><span class="box lock"></span> 싱크대</span>
+          </div>
+          <span class="lock-msg">실측 완료 후 시공범위는 수정할 수 없습니다.</span>
+        </div>
+        <div class="field">
+          <label>실측일 <span class="req">*</span></label>
+          <div class="input filled">2026-06-09 <span class="caret">📅</span></div>
+        </div>
+        <div class="field">
+          <label>계약금</label>
+          <div class="check"><span class="box on">✓</span> 계약금 있음</div>
+          <div class="input filled">50,000 원</div>
+        </div>
+        <div class="field">
+          <label>결제방법</label>
+          <div class="input filled">카드 <span class="caret">▾</span></div>
+        </div>
+        <div class="field">
+          <label>카드사 <span class="req">*</span></label>
+          <div class="input filled">신한 <span class="caret">▾</span></div>
+        </div>
+        <div class="field">
+          <label>카드 끝 4자리 <span class="req">*</span></label>
+          <div class="input filled">1234</div>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px;">시공범위 외 필드는 종료·취소 이전 단계에서 수정 가능. (※ 추가 잠금은 PRD 미결사항 "실측 완료 후 수정 정책" 확정 시 반영)</p>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 3: 변경 사항 없음 토스트 ───────── -->
+<div class="case-label">케이스 3 — 변경 사항 없음 <small>수정 없이 [저장] 시도 · 폼 상단 토스트</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 18px 26px;">
+    <div class="toast err" style="margin-bottom:0;">⚠ 변경된 내용이 없습니다. <span class="marker" style="margin-left:auto;">6</span></div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 4: 저장 완료 ───────── -->
+<div class="case-label">케이스 4 — 저장 완료 <small>저장 성공 시 완료 토스트 표시 후 [A-2.3 주문 상세]로 복귀</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 18px 26px;">
+    <div class="toast ok" style="margin-bottom:0;">✓ 주문이 수정되었습니다. <span class="marker" style="margin-left:auto;">7</span></div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 A-2.4 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: [A-2.3 주문 상세]의 [수정] 버튼. A-2.2와 동일한 폼 구성에 기존 값이 채워진 상태로 열림. 진행 상태 "종료"·"취소"는 A-2.3에서 [수정] 버튼 자체가 비활성이라 이 화면 진입 불가.</li>
+    <li><span class="marker">2</span> <b>시공범위(다품목 반영)</b>: A-2.2와 동일한 4종 체크박스 그룹. 접수 단계에서는 여러 종류 추가·해제 가능(같은 종류는 1개씩). 주문 경로·상담 경로도 A-2.2와 동일하게 포함.</li>
+    <li><span class="marker">3</span> 고객 제공 사진: 기존 사진 조회·추가·삭제 가능 (A-2.3에서는 조회만, 추가·삭제는 이 화면에서).</li>
+    <li><span class="marker">4</span> [저장]: 필수 필드 유효 시. 주문 업데이트 + 수정일·수정자 자동 기록(A-2.1 목록의 수정일·작성자 컬럼 갱신) → [A-2.3]으로 복귀, 완료 토스트.</li>
+    <li><span class="marker">5</span> 수정 제한: 진행 상태 "실측 완료" 이후 시공범위 <b>전체 그룹 비활성</b> + "실측 완료 후 시공범위는 수정할 수 없습니다." (선택된 품목 구성이 잠긴 채 회색 표시.)</li>
+    <li><span class="marker">6</span> 변경 사항 없이 [저장] 시도: "변경된 내용이 없습니다." 폼 상단 토스트.</li>
+    <li><span class="marker">7</span> 저장 완료 토스트 후 [A-2.3 주문 상세] 복귀.</li>
+  </ol>
+  <h3 style="margin-top:16px;">A-2.2와 동일하여 생략한 케이스</h3>
+  <ol>
+    <li>입력 필드 유효성 에러(고객 이름·연락처·주소·시공범위·실측일·계약금·"기타" 결제 특이사항·"카드" 결제 카드사·끝 4자리) — A-2.2 케이스 4와 동일.</li>
+    <li>조건부 필드(계약금 체크·카드 선택) 동작 — A-2.2 케이스 2와 동일.</li>
+    <li>[전체 스케줄] 모달 — A-2.2 케이스 3과 동일(건별 스택).</li>
+    <li>[취소] 확인 모달(변경 사항 있을 때) — A-2.2 케이스 5와 동일, 복귀처만 [A-2.3]으로 다름.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>시공범위 4종(냉장고장·붙박이장·신발장·싱크대)은 A-2.2와 동일한 1차 노출 품목 예시. 최종 목록은 운영 정의.</li>
+    <li>저장 완료 토스트 문구("주문이 수정되었습니다.")는 명세에 "완료 토스트 표시"만 정의 — 문구는 임의, 확정 필요.</li>
+    <li>사진 썸네일의 ✕ 삭제 버튼·＋ 추가 타일 형태, 잠금 필드의 회색 처리 방식은 임의 표현.</li>
+    <li>샘플 데이터는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

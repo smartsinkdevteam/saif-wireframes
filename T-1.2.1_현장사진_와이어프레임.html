@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.2.1 현장 사진 (실측 위저드 1단계) — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1240px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+
+  .stage { max-width: 1240px; margin: 0 auto; display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; max-width: 360px; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+
+  .phone { width: 360px; height: 720px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 8px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-header .item-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 3px 10px; }
+
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 0; padding: 6px 30px 12px; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 70px; }
+  .step .dot { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--ink-faint); background: var(--surface); }
+  .step.cur .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step .lb { font-size: 10px; color: var(--ink-faint); }
+  .step.cur .lb { color: var(--accent); font-weight: 700; }
+  .step-line { flex: 1; height: 1.5px; background: var(--line-soft); margin-bottom: 14px; max-width: 40px; }
+
+  .p-body { flex: 1; overflow: hidden; padding: 4px 16px 12px; display: flex; flex-direction: column; }
+  .camera-area { flex: 1; border: 1.5px dashed var(--line); border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--ink-faint); background: var(--paper); }
+  .camera-area .ic { font-size: 34px; }
+  .camera-area .msg { font-size: 12.5px; text-align: center; line-height: 1.7; }
+  .shoot-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 11px 26px; border-radius: 99px; background: var(--ink); color: #fff; }
+
+  .thumb-strip { display: flex; gap: 8px; padding-top: 12px; }
+  .thumb { width: 64px; height: 64px; border: 1px solid var(--line-soft); border-radius: 8px; background: var(--paper); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 18px; position: relative; }
+  .thumb .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .strip-hint { font-size: 10.5px; color: var(--ink-faint); padding-top: 6px; }
+  .err-msg { font-size: 11.5px; color: var(--error); padding-top: 6px; }
+
+  .p-footer { padding: 10px 16px 14px; border-top: 1px solid var(--line-soft); }
+  .p-btn { display: block; width: 100%; text-align: center; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; }
+  .p-btn.disabled { background: var(--paper); color: #c4c2ba; border: 1px solid var(--line-soft); font-weight: 400; }
+
+  .perm-band { background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.7; display: flex; flex-direction: column; gap: 8px; }
+  .perm-band .btn-xs { align-self: flex-start; font-size: 11.5px; padding: 7px 14px; border: 1px solid var(--error); border-radius: 8px; background: var(--surface); color: var(--error); }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1240px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>T-1.2.1 현장 사진 <small>실측 위저드 1/3 단계 / 기사 / 모바일 웹·PWA / 케이스 3종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- ───────── 케이스 1: 기본 (촬영됨) ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본<small>사진 2장 촬영 · [다음] 활성</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장 <span class="marker">1</span></span></div>
+      <div class="stepper">
+        <div class="step cur"><span class="dot">1</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+        <span class="marker" style="margin-left:6px;">2</span>
+      </div>
+      <div class="p-body">
+        <div class="camera-area">
+          <span class="ic">📷</span>
+          <div class="msg">현장 사진을 촬영하세요 (최소 1장 필수)<br>촬영한 사진은 이 품목의 실측 참고 사진으로 자동 저장됩니다 <span class="marker">3</span></div>
+          <span class="shoot-btn">📷 촬영</span>
+        </div>
+        <div class="thumb-strip">
+          <div class="thumb">🖼<span class="del">✕</span></div>
+          <div class="thumb">🖼<span class="del">✕</span></div>
+          <span class="marker" style="align-self:center;">4</span>
+        </div>
+        <div class="strip-hint">촬영 2장 · 썸네일 ✕로 개별 삭제</div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn">다음 <span class="marker" style="background:#fff;color:var(--ink);">5</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 2: 사진 없음 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 사진 없음<small>[다음] 비활성 · 사진 없이 [다음] 시도 시 에러</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step cur"><span class="dot">1</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="camera-area">
+          <span class="ic">📷</span>
+          <div class="msg">현장 사진을 촬영하세요 (최소 1장 필수)</div>
+          <span class="shoot-btn">📷 촬영</span>
+        </div>
+        <div class="err-msg">현장 사진을 1장 이상 촬영해주세요. <span class="marker">6</span></div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn disabled">다음</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 3: 카메라 권한 거부 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 카메라 권한 거부<small>권한 안내 + 설정 유도</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step cur"><span class="dot">1</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="perm-band">
+          ⚠ 카메라 사용 권한이 필요합니다. 설정에서 권한을 허용해주세요. <span class="marker">7</span>
+        </div>
+        <div class="camera-area" style="margin-top:10px; opacity:0.5;">
+          <span class="ic">📷</span>
+          <div class="msg">카메라를 사용할 수 없습니다</div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn disabled">다음</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.2.1 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: [T-1.1.1]에서 [실측 시작]. 측정 대상 품목은 진입 시 선택한 품목으로 고정(위저드 내 변경 불가) — "측정 중: 냉장고장" 표시는 명세상 2단계(T-1.2.2) 정의이나 일관성을 위해 1단계부터 표시(임의).</li>
+    <li><span class="marker">2</span> 위저드 위치 1/3. 상단 진행 표시기 1-2-3 — 해당 단계 데이터가 있을 때 탭하면 그 단계로 이동.</li>
+    <li><span class="marker">3</span> 카메라 호출: 화면 진입 시 또는 [촬영] 버튼. 촬영 사진은 해당 품목의 "실측 참고" 사진으로 분류되어 주문 상세 품목 탭 실측 영역에 자동 저장.</li>
+    <li><span class="marker">4</span> 하단 촬영 썸네일 리스트 · ✕로 개별 삭제.</li>
+    <li><span class="marker">5</span> [다음]: 사진 1장 이상 촬영 시 활성 → [T-1.2.2 현장 영역 입력]. 각 단계 [다음]에서 입력값 임시 저장(draft) — 중간 이탈 시 [이어서 (n/N)] 재개.</li>
+    <li><span class="marker">6</span> 사진 없이 [다음] 시도: "현장 사진을 1장 이상 촬영해주세요."</li>
+    <li><span class="marker">7</span> 카메라 권한 거부: "카메라 사용 권한이 필요합니다. 설정에서 권한을 허용해주세요." — 명세 문구 그대로.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>진행 표시기의 단계 라벨(현장 사진/영역 입력/레이아웃)과 디자인(원형+선)은 임의 표현.</li>
+    <li>카메라 영역의 안내 문구·점선 박스 표현은 임의 작성 — 확정 필요. 권한 거부 시에는 명세 안내 문구만 표시(별도 버튼 없음, 06-12 결정).</li>
+    <li>케이스 2의 에러는 비활성 [다음] 탭 시 노출되는 것으로 가정(명세는 메시지만 정의, 노출 시점·위치 미정).</li>
+    <li>헤더의 [←] 뒤로가기 동작(주문 상세 복귀, draft 유지)은 명세의 임시 저장 규칙에서 유추 — 명시 정의 필요.</li>
+  </ol>
+</div>
+
+</body>
+</html>

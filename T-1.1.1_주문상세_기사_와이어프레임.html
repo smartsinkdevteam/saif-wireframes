@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.1.1 주문 상세 (기사) — 인터랙티브 프로토타입 v4</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --teal: #0f6e56; --teal-bg: #e1f5ee;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --ok: #3b6d11; --ok-bg: #eaf3de;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 36px 24px 64px; }
+  .doc-head { max-width: 760px; margin: 0 auto 16px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .doc-head p { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.6; }
+
+  /* ── 컨트롤 바 ── */
+  .controls { max-width: 760px; margin: 0 auto 20px; display: flex; flex-direction: column; gap: 11px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .ctrl-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ctrl-label { font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.06em; width: 40px; flex-shrink: 0; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 12.5px; padding: 8px 16px; background: var(--surface); color: var(--ink-soft); border: none; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.on { background: var(--ink); color: #fff; font-weight: 700; }
+  .steps { display: flex; gap: 6px; flex-wrap: wrap; }
+  .step { font: inherit; font-size: 12px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--ink-soft); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .step.on { border-color: var(--accent); background: var(--accent-bg); color: #0c447c; font-weight: 700; }
+  .step .n { font-size: 10px; opacity: 0.6; }
+  .hint-lite { font-size: 11.5px; color: var(--ink-faint); }
+  .link-btn { font: inherit; font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+
+  /* ── 폰 ── */
+  .stage-wrap { display: flex; justify-content: center; }
+  .phone { width: 360px; height: 780px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--line-soft); font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-body { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .p-footer { padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 6px; }
+  .p-btn { display: block; width: 100%; text-align: center; font: inherit; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; border: none; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+  .p-btn.disabled { background: var(--paper); color: #c4c2ba; border: 1px solid var(--line-soft); font-weight: 400; }
+  .foot-hint { font-size: 10.5px; color: var(--error); text-align: center; }
+
+  .sec { border: 1px solid var(--line-soft); border-radius: 10px; padding: 11px 12px; }
+  .sec h4 { font-size: 12px; font-weight: 700; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .sec h4 .spacer { flex: 1; }
+  .kv { font-size: 12px; line-height: 1.8; color: var(--ink-soft); }
+  .kv b { color: var(--ink); font-weight: 600; }
+  .thumbs { display: flex; gap: 6px; margin-top: 6px; }
+  .thumb { width: 46px; height: 46px; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--paper); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 14px; }
+  .thumb.add { border-style: dashed; font-size: 11px; }
+  .badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .b-blue { background: var(--accent-bg); color: #0c447c; }
+  .b-teal { background: var(--teal-bg); color: var(--teal); }
+  .b-gray { background: #f1efe8; color: #5f5e5a; }
+  .b-amber { background: var(--warn-bg); color: #633806; }
+  .b-green { background: var(--ok-bg); color: var(--ok); }
+  .btn-xs { font: inherit; font-size: 11px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); display: inline-flex; align-items: center; gap: 3px; }
+
+  .tabs { display: flex; gap: 4px; align-items: center; }
+  .tab { font-size: 12px; padding: 7px 13px; color: var(--ink-soft); border: 1px solid var(--line-soft); border-radius: 99px; }
+  .tab.on { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 700; }
+
+  .area-empty { text-align: center; padding: 16px 0 6px; }
+  .area-empty .msg { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 10px; }
+  .start-btn { display: inline-block; font-size: 12.5px; padding: 10px 22px; border-radius: 9px; background: var(--accent); color: #fff; font-weight: 600; }
+  .dims { display: flex; flex-wrap: wrap; gap: 4px; }
+  .dim-chip { font-size: 10.5px; border: 1px solid var(--line-soft); border-radius: 5px; padding: 2px 6px; color: var(--ink-soft); background: var(--paper); }
+  .memo { font-size: 11.5px; color: var(--ink-soft); background: var(--paper); border-radius: 7px; padding: 8px 10px; margin-top: 6px; }
+  .price-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; color: var(--ink-soft); }
+  .price-row.total { border-top: 1px dashed var(--line-soft); margin-top: 4px; padding-top: 7px; font-weight: 700; color: var(--ink); font-size: 13px; }
+  .checkline { display: flex; align-items: center; gap: 6px; font-size: 11.5px; padding: 2px 0; color: var(--ink-soft); }
+  .box { width: 13px; height: 13px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12px; }
+  .toast.err { background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+
+  /* ── 오버레이 ── */
+  .ov-backdrop { position: absolute; inset: 0; background: rgba(20,20,18,0.34); z-index: 5; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -6px 16px rgba(0,0,0,0.12); padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; max-height: 92%; overflow-y: auto; }
+  .sheet .grab { width: 34px; height: 4px; border-radius: 99px; background: var(--line); align-self: center; }
+  .fullpage { position: absolute; inset: 0; z-index: 6; background: var(--surface); display: flex; flex-direction: column; }
+  .btn-pri { display: block; width: 100%; text-align: center; font: inherit; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; border: none; cursor: pointer; }
+  .btn-out { display: block; width: 100%; text-align: center; font: inherit; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
+  .toast-host { position: absolute; left: 14px; right: 14px; bottom: 16px; z-index: 8; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast-msg { background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5; padding: 10px 12px; border-radius: 9px; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+
+  .notes { max-width: 760px; margin: 30px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  /* 작업지시서 미리보기 / 인쇄 */
+  .wo-sheet { background:#fff; border:1px solid var(--line); border-radius:4px; padding:14px 14px 16px; box-shadow:0 2px 10px rgba(0,0,0,0.12); margin:2px auto 0; }
+  .wo-svg { width:100%; max-width:300px; display:block; margin:6px auto 0; }
+  .wo-cut-svg { width:100%; max-width:210px; display:block; margin:6px auto 0; }
+  #print-root { display:none; }
+  @media print {
+    @page { size:A4; margin:14mm; }
+    html, body { background:#fff !important; padding:0 !important; margin:0 !important; }
+    body > *:not(#print-root) { display:none !important; }
+    #print-root { display:block !important; }
+    #print-root .wo-page { break-after:page; }
+    #print-root .wo-page:last-child { break-after:auto; }
+    .wo-svg { max-width:360px; }
+    .wo-cut-svg { max-width:300px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 인터랙티브 프로토타입 · 1차 오픈 범위 · v4.1 — 역할·진행 단계 전환형 (기사 화면 결제 표시 = 착수금 대기)</div>
+  <h1>T-1.1.1 주문 상세 (기사) <small>모바일 웹·PWA</small></h1>
+  <p>위 컨트롤로 <b>역할</b>(실측/시공)과 <b>진행 단계</b>를 바꾸면 화면이 그에 맞게 갱신됩니다. 품목 탭, 하단 완료 버튼, 입금 확인·품목 변경 시트, 실측 조회 화면은 모두 클릭해 동작을 확인할 수 있어요.</p>
+</div>
+
+<div class="controls" id="controls"></div>
+
+<div class="stage-wrap">
+  <div class="phone" id="phone"></div>
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.1.1 기준)</h3>
+  <ol>
+    <li><b>진입</b>: [T-1.1 작업 목록] 카드 클릭 → 주문 상세. 본인 담당 업무·진행 상태에 따라 구성·완료 액션이 달라짐(역할 토글로 확인).</li>
+    <li><b>고객/현장 정보</b>: 고객명·주소·연락처·특이사항(읽기 전용) + 고객 제공 사진(조회만). 주문 전체 단위.</li>
+    <li><b>일정·결제 + 입금 확인</b>: 결제 상태는 계약금 대기 → 착수금 대기 → 잔금 대기 → 잔금 완료(+환불)로 진행 상태와 독립(데이터 모델 2축). 계약금은 주문 등록 시 거는 고객만 — 안 걸면 계약금 대기로 시작. 단 <b>실측 기사 주문 상세에 오는 주문은 계약금 대기 또는 착수금 대기 상태</b>이고, 계약금을 걸었든 안 걸었든 기사가 계약 성공 시 착수금을 받아오므로 <b>화면 표시는 '착수금 대기'로 통일</b>(잔금 대기·완료는 이 화면에 나타나지 않음). 착수금은 계약서 작성(총액 확정) 시 수령하므로 [착수금 입금 확인]은 실측 완료(계약 확정) 후 노출되고, 누르면 결제 상태가 잔금 대기로 전이(이후 잔금 입금 확인은 관리자). 금액 — 총액 = 계약서 행 합계, 착수금 = 총액 × 30%, 잔금 = 총액 − 계약금 − 착수금. 입금 확인 권한: 착수금 = 실측 기사·관리자 / 잔금 = 관리자만(계좌이체 포함). 시공 기사 화면에는 일정·결제 섹션 자체를 노출하지 않음.</li>
+    <li><b>품목 탭 위계</b>: 실측 상세(치수·메모·사진)와 레이아웃 미리보기는 <b>품목 종속</b>이라 탭 콘텐츠 안에 묶여 탭 전환 시 통째로 교체. 계약 정보(합계)는 <b>주문 전체</b> 단위라 탭 바깥 상위에 고정.</li>
+    <li><b>실측 시작 / 비냉장고장</b>: 냉장고장만 [실측 시작]→위저드(T-1.2.1). 비냉장고장(붙박이장·신발장·싱크대)은 위저드 없이 [실측 완료] 버튼으로 측정완료 처리(측정 데이터·작업지시서 없음, 계약 금액 라인만).</li>
+    <li><b>실측 완료(주문 단위) 활성 조건</b>: 모든 품목 측정완료 + 계약서 확정 + 실측 참고 사진 1장 이상. 미충족 시 부족 항목 안내.</li>
+    <li><b>계약서 작성 → 확정 → 실측 완료</b>: 전 품목 측정완료 시 [계약서 작성](T-1.3) 활성. 계약 확정 전까지 [실측 완료] 비활성("계약서 확정 필요"). <b>계약 금액은 계약서 작성 화면에서 항목별 input으로 입력(합계 자동 합산)</b>하므로, 작성 전 단계에는 금액·합계를 표시하지 않고 [계약서 작성] 버튼만 노출. 확정된 금액은 실측 완료 단계에서 표시.</li>
+    <li><b>작업지시서 게이팅</b>: 작업지시서는 계약 확정 + 진행 상태 <b>실측 완료</b> 이후 발행되는 산출물이므로 그 이전 단계에는 노출되지 않음. 실측 완료 후 주문 상세에서 인쇄(window.print(), 관리자와 동일한 방식 · PDF 파일 저장 없음).</li>
+    <li><b>시공 기사</b>: 일정·결제 미노출, [실측 조회](읽기 전용 전체 페이지), [품목 변경](현장 품목 추가 시트 — 본인 실측 담당 품목만, 취소는 실측 기사). 시공은 품목별 [시공 시작]→위저드(T-1.4).</li>
+    <li><b>시공 완료(주문 단위) 활성 조건</b>: 모든 품목 시공완료(시공 정보 저장 + 완료 사진 1장 이상). 이후 보수는 AS(추후).</li>
+    <li><b>에러 토스트</b>: 사진 용량/장수/업로드 실패/완료 처리 실패 — 명세 문구 그대로(컨트롤 바의 "에러 토스트 예시 보기").</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li><b>동적 전환은 검토용</b>: 역할·단계 전환과 버튼 동작은 위계·흐름 확인을 위한 것이며, 실제 화면 전환·애니메이션·상태 머신은 구현 시 확정. 완료 버튼·수정 버튼 등은 실제 위저드/계약 화면(별도 명세) 대신 안내 토스트로 표현.</li>
+    <li><b>레이아웃 미리보기 노출</b>: 실측 기사 주문 상세의 도면 미리보기는 기능 명세서에 명시 없음. 시공 기사 [실측 조회] 도식을 품목 탭 안에 축소 재사용한 것 — 노출 여부·렌더 방식 확정 필요.</li>
+    <li><b>작업지시서 노출 단위</b>: "주문 단위 실측 완료 이후 노출"로 잡았으나, "품목별 냉장고장 측정완료 시 바로 노출"인지 명세 확인 필요.</li>
+    <li>입금 확인 시트의 금액·결제방법 UI, 예상 잔금 자동 계산, 카드사 셀렉트는 명세 상세 정의 없음. [품목 변경]은 바텀시트, [실측 조회]는 전체 페이지로 표현(형태 정의 없음).</li>
+    <li>한 주문에 여러 종류 품목(같은 종류 1개씩)은 1차 동작에 해당. 같은 종류 여러 개·별칭은 추후(데이터 모델만 선반영).</li>
+    <li>섹션 구획·버튼 스타일·색상·샘플 데이터(치수·금액·연락처 등)는 전부 임의/가상.</li>
+    <li>[품목 변경] 시트는 시공 기사가 <b>본인 실측 담당 품목만 추가</b>할 수 있고 취소는 불가(취소는 실측 기사). 명세·PRD·유저 플로우와 정합.</li>
+  </ol>
+</div>
+
+<div id="print-root"></div>
+
+<script>
+  var state = { role: 'measure', stage: 'before', downConfirmed: false, tab: 'fridge', overlay: null, toast: null };
+
+  var ROLES = {
+    measure: { label: '실측 기사', stages: ['before', 'partial', 'allMeasured', 'doneMeasure'] },
+    install: { label: '시공 기사', stages: ['beforeInstall', 'doneInstall'] }
+  };
+  var STAGE_LABEL = {
+    before: '실측 전', partial: '일부 측정', allMeasured: '전 품목 측정', doneMeasure: '실측 완료',
+    beforeInstall: '시공 전', doneInstall: '시공 완료'
+  };
+
+  // 결제 상태(enum)는 계약금 대기 → 착수금 대기 → 잔금 대기 → 잔금 완료(+환불)로 데이터 모델대로 진행 상태와 독립.
+  // - 단, 실측 기사 주문 상세에 오는 주문은 계약금 대기/착수금 대기 상태이고, 계약금을 걸었든 안 걸었든
+  //   기사가 계약 성공 시 착수금을 받아오므로 이 화면의 표시는 '착수금 대기'로 통일한다.
+  // - 착수금은 계약서 작성(총액 확정) 시 수령 → [착수금 입금 확인]은 실측 완료 후 노출, 누르면 잔금 대기로 전이(downConfirmed).
+  // - 잔금 대기·완료는 이 화면에 나타나지 않음(잔금 입금 확인은 관리자).
+
+  // 금액 규칙: 계약금 = 주문 등록 시 받은 선입금(기본 5만원). 총액 = 계약서 작성 시 품목별 입력 합계.
+  // 착수금 = 총액 × 30%(실측 기사가 현장에서 수령). 잔금 = 총액 − 계약금 − 착수금.
+  var TOTAL = 1850000;          // 계약서 작성에서 확정된 총액(샘플)
+  var DEPOSIT = 50000;          // 계약금(주문 등록 시 이미 수령한 선입금)
+  var DOWN = Math.round(TOTAL * 0.3);   // 착수금 = 총액 × 30%
+  var BALANCE = TOTAL - DEPOSIT - DOWN; // 잔금
+  function won(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원'; }
+  // 총액(=착수금·잔금 금액)은 계약 확정 이후에만 알 수 있다.
+  function totalKnown() { return state.role === 'install' || (state.role === 'measure' && state.stage === 'doneMeasure'); }
+
+  function inStage(list) { return list.indexOf(state.stage) !== -1; }
+  function fridgeMeasured() { return state.role === 'install' || inStage(['partial', 'allMeasured', 'doneMeasure']); }
+  function closetMeasured() { return state.role === 'install' || inStage(['allMeasured', 'doneMeasure']); }
+
+  function layoutGrid() {
+    return '<div style="border:1px solid var(--line);border-radius:6px;padding:7px;background:var(--paper);">'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">'
+      + '<div style="grid-column:1/3;height:26px;border:1px solid var(--line);border-radius:4px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink-soft);">상부장 · 도어 596×340</div>'
+      + '<div style="height:48px;border:1px solid var(--line);border-radius:4px;background:#eef3f8;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--accent);">냉장고</div>'
+      + '<div style="height:48px;border:1px solid var(--line);border-radius:4px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink-soft);">수납 · 도어 596×560</div>'
+      + '<div style="grid-column:1/3;height:18px;border:1px solid var(--line);border-radius:4px;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:var(--ink-faint);">걸레받이</div>'
+      + '</div></div>';
+  }
+  function layoutPreview() {
+    return '<div class="kv" style="margin-top:10px;font-weight:600;color:var(--ink);">레이아웃 미리보기</div>'
+      + '<div style="margin-top:5px;">' + layoutGrid() + '</div>'
+      + '<div class="kv" style="font-size:10.5px;margin-top:5px;">실측 위저드 3단계 결과 · 앞밴드 있음 · 도어 = 장 −4mm</div>';
+  }
+
+  // 작업지시서 정면 레이아웃(벡터 SVG) — 화면·인쇄 공용. 공장에서 확대해도 선·치수가 안 깨짐.
+  function layoutSVG() {
+    return '<svg class="wo-svg" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg" font-family="inherit">'
+      + '<line x1="40" y1="20" x2="286" y2="20" stroke="var(--ink-faint)" stroke-width="0.7"/>'
+      + '<text x="163" y="15" text-anchor="middle" font-size="8.5" fill="var(--ink-faint)">외경 1,260</text>'
+      + '<line x1="26" y1="30" x2="26" y2="250" stroke="var(--ink-faint)" stroke-width="0.7"/>'
+      + '<text x="13" y="142" text-anchor="middle" font-size="8.5" fill="var(--ink-faint)" transform="rotate(-90 13 142)">전체 높이 2,300</text>'
+      + '<rect x="40" y="30" width="246" height="220" fill="none" stroke="var(--ink-soft)" stroke-width="1.4"/>'
+      + '<rect x="40" y="30" width="146" height="46" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="113" y="56" text-anchor="middle" font-size="8" fill="var(--ink-soft)">상부장 도어</text>'
+      + '<rect x="186" y="30" width="100" height="46" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="236" y="51" text-anchor="middle" font-size="8" fill="var(--ink-soft)">상부장</text>'
+      + '<text x="236" y="61" text-anchor="middle" font-size="7" fill="var(--ink-faint)">596×340</text>'
+      + '<rect x="40" y="76" width="146" height="158" fill="#eef3f8" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="113" y="150" text-anchor="middle" font-size="10" fill="var(--accent)">냉장고</text>'
+      + '<text x="113" y="164" text-anchor="middle" font-size="7.5" fill="var(--ink-faint)">개구부 900×1,800</text>'
+      + '<rect x="186" y="76" width="100" height="78" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="236" y="112" text-anchor="middle" font-size="8" fill="var(--ink-soft)">수납 도어</text>'
+      + '<text x="236" y="123" text-anchor="middle" font-size="7" fill="var(--ink-faint)">596×560</text>'
+      + '<circle cx="281" cy="92" r="1.6" fill="none" stroke="var(--ink-soft)" stroke-width="0.8"/>'
+      + '<circle cx="281" cy="138" r="1.6" fill="none" stroke="var(--ink-soft)" stroke-width="0.8"/>'
+      + '<rect x="186" y="154" width="100" height="40" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="236" y="178" text-anchor="middle" font-size="7.5" fill="var(--ink-soft)">서랍 1단</text>'
+      + '<rect x="186" y="194" width="100" height="40" fill="var(--surface)" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="236" y="218" text-anchor="middle" font-size="7.5" fill="var(--ink-soft)">서랍 2단</text>'
+      + '<rect x="40" y="234" width="246" height="16" fill="#f4f1ea" stroke="var(--ink-soft)" stroke-width="1"/>'
+      + '<text x="163" y="245" text-anchor="middle" font-size="7.5" fill="var(--ink-faint)">걸레받이 (도어 −50mm)</text>'
+      + '</svg>';
+  }
+
+  function woTable(rows) {
+    var head = rows[0].map(function (c) { return '<th style="text-align:left;font-weight:700;color:var(--ink-soft);border-bottom:1px solid var(--line);padding:3px 4px;">' + c + '</th>'; }).join('');
+    var body = rows.slice(1).map(function (r) {
+      return '<tr>' + r.map(function (c, i) { return '<td style="padding:3px 4px;border-bottom:1px solid var(--line-soft);' + (i === 0 ? 'font-weight:600;' : 'color:var(--ink-soft);') + '">' + c + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    return '<table style="width:100%;border-collapse:collapse;font-size:9.5px;"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  // 원판(합판) 재단도 SVG — 작업지시서 본체. 원판 1장당 1페이지.
+  // 원판 1,220×2,440mm, 커프(톱날 여유) 10mm. 좌표는 원판 위 mm.
+  function cutSheetSVG(panels) {
+    var BW = 1220, BH = 2440, ox = 80, oy = 20;
+    var s = '<svg class="wo-cut-svg" viewBox="0 0 1320 2520" xmlns="http://www.w3.org/2000/svg" font-family="inherit">';
+    s += '<rect x="' + ox + '" y="' + oy + '" width="' + BW + '" height="' + BH + '" fill="#ffffff" stroke="var(--ink-soft)" stroke-width="2.5"/>';
+    s += '<rect x="' + (ox + 12) + '" y="' + (oy + 12) + '" width="' + (BW - 24) + '" height="' + (BH - 24) + '" fill="none" stroke="#9bb8d8" stroke-width="1" stroke-dasharray="6 6"/>';
+    panels.forEach(function (p) {
+      var x = ox + p.x, y = oy + p.y, cx = x + p.w / 2, cy = y + p.h / 2;
+      s += '<rect x="' + x + '" y="' + y + '" width="' + p.w + '" height="' + p.h + '" fill="' + p.tint + '" stroke="' + p.ink + '" stroke-width="1.6"/>';
+      s += '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="50" font-weight="800" fill="' + p.ink + '">' + p.label + '</text>';
+      s += '<text x="' + cx + '" y="' + (cy + 40) + '" text-anchor="middle" font-size="37" fill="var(--ink-soft)">' + p.mm + (p.rot ? '  \u21bb' : '') + '</text>';
+    });
+    s += '<line x1="' + ox + '" y1="' + (oy + BH + 26) + '" x2="' + (ox + BW) + '" y2="' + (oy + BH + 26) + '" stroke="var(--ink-faint)" stroke-width="1"/>';
+    s += '<text x="' + (ox + BW / 2) + '" y="' + (oy + BH + 50) + '" text-anchor="middle" font-size="40" fill="var(--ink-faint)">1,220 mm</text>';
+    s += '<line x1="' + (ox - 26) + '" y1="' + oy + '" x2="' + (ox - 26) + '" y2="' + (oy + BH) + '" stroke="var(--ink-faint)" stroke-width="1"/>';
+    s += '<text x="' + (ox - 46) + '" y="' + (oy + BH / 2) + '" text-anchor="middle" font-size="40" fill="var(--ink-faint)" transform="rotate(-90 ' + (ox - 46) + ' ' + (oy + BH / 2) + ')">2,440 mm</text>';
+    s += '</svg>';
+    return s;
+  }
+
+  // 샘플 패널 배치(냉장고장) — 화면 확인용. 실제로는 파이썬 네스팅이 산출.
+  var BOARD1 = [
+    { x: 0, y: 0, w: 580, h: 1209, label: 'D#1', mm: '1209\u00d7580', rot: true, tint: '#e3f3ef', ink: '#0f6e56' },
+    { x: 590, y: 0, w: 580, h: 1209, label: 'D#2', mm: '1209\u00d7580', rot: true, tint: '#fdecec', ink: '#a32d2d' },
+    { x: 0, y: 1219, w: 919, h: 580, label: 'D#3', mm: '919\u00d7580', rot: false, tint: '#fbf0e0', ink: '#854f0b' },
+    { x: 0, y: 1809, w: 919, h: 580, label: 'D#4', mm: '919\u00d7580', rot: false, tint: '#f3eaf6', ink: '#6b3aa0' }
+  ];
+  var BOARD2 = [
+    { x: 0, y: 0, w: 590, h: 2300, label: 'D#5 \uce21\ud310', mm: '2300\u00d7590', rot: true, tint: '#e3f3ef', ink: '#0f6e56' },
+    { x: 600, y: 0, w: 590, h: 2300, label: 'D#6 \uce21\ud310', mm: '2300\u00d7590', rot: true, tint: '#fdecec', ink: '#a32d2d' },
+    { x: 0, y: 2310, w: 1140, h: 120, label: 'D#7 \uc120\ubc18', mm: '1140\u00d7120', rot: false, tint: '#fbf0e0', ink: '#854f0b' }
+  ];
+
+  function pageHeader(title, badge, right) {
+    return '<div style="display:flex;align-items:center;gap:6px;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:9px;">'
+      + '<span style="font-size:14px;font-weight:800;">' + title + '</span>'
+      + '<span class="badge b-blue" style="font-size:9.5px;">' + badge + '</span>'
+      + '<span style="flex:1;"></span>'
+      + '<span style="font-size:9.5px;color:var(--ink-faint);">' + right + '</span></div>';
+  }
+
+  // 재단도 페이지(원판 1장) — 작업지시서 본체
+  function cutPage(boardNo, total, panels) {
+    var rows = [['\ud328\ub110', '\uaddc\uaca9(mm)', '\ube44\uace0']].concat(panels.map(function (p) {
+      return [p.label, p.mm, p.rot ? '\ud68c\uc804 \ubc30\uce58 \u21bb' : '\uc815\ubc30\uce58'];
+    }));
+    return pageHeader('\uc791\uc5c5\uc9c0\uc2dc\uc11c \u00b7 \uc7ac\ub2e8\ub3c4', '\ub0c9\uc7a5\uace0\uc7a5', 'SAIF \u00b7 #2026-0128')
+      + '<div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 8px;font-size:10px;margin-bottom:9px;">'
+      + '<span style="color:var(--ink-faint);">\uc6d0\ud310</span><span>1,220\u00d72,440 \u00b7 18T</span>'
+      + '<span style="color:var(--ink-faint);">\uc6d0\ud310 \ubc88\ud638</span><span>' + boardNo + ' / ' + total + '</span>'
+      + '<span style="color:var(--ink-faint);">\ucee4\ud504</span><span>10mm</span>'
+      + '<span style="color:var(--ink-faint);">\ud488\ubaa9</span><span>\ub0c9\uc7a5\uace0\uc7a5</span></div>'
+      + cutSheetSVG(panels)
+      + '<div style="font-size:10.5px;font-weight:700;margin:11px 0 4px;">\ud328\ub110 \ubaa9\ub85d (\uc774 \uc6d0\ud310)</div>'
+      + woTable(rows)
+      + '<div style="font-size:9.5px;color:var(--ink-soft);margin-top:9px;line-height:1.6;border-top:1px dashed var(--line-soft);padding-top:7px;">\u21bb = \uacb0 \ubc29\ud5a5\u00b7\ud6a8\uc728 \uc704\ud574 \ud68c\uc804 \ubc30\uce58 \u00b7 \ud328\ub110 \uac04\uaca9 = \ucee4\ud504 10mm \u00b7 \uc138\ubd80 \uc11c\uc2dd\uc740 \uac1c\ubc1c \uacf5\uc720 \ub514\uc790\uc778 \uc2dc\uc548\uc11c \ucc38\uace0</div>';
+  }
+
+  // 레이아웃 정보 페이지(품목당 1장) — 부가
+  function layoutPage() {
+    return pageHeader('\ub808\uc774\uc544\uc6c3 \uc815\ubcf4', '\ub0c9\uc7a5\uace0\uc7a5', 'SAIF \u00b7 #2026-0128 \u00b7 \ubd80\uac00')
+      + '<div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 8px;font-size:10px;margin-bottom:9px;">'
+      + '<span style="color:var(--ink-faint);">\uace0\uac1d</span><span>\ubc15OO</span>'
+      + '<span style="color:var(--ink-faint);">\uc2e4\uce21\uc77c</span><span>2026-06-12</span>'
+      + '<span style="color:var(--ink-faint);">\uc8fc\uc18c</span><span style="grid-column:2/5;">\uacbd\uae30 \ubd80\ucc9c\uc2dc OO\ub85c 33</span>'
+      + '<span style="color:var(--ink-faint);">\uc2e4\uce21\uae30\uc0ac</span><span>\uae40\uae30\uc0ac</span></div>'
+      + '<div style="font-size:10.5px;font-weight:700;margin-bottom:4px;">\ud604\uc7a5 \uce58\uc218 (mm)</div>'
+      + '<div class="dims" style="margin-bottom:10px;"><span class="dim-chip">\ub0b4\uacbd 1,200</span><span class="dim-chip">\uc678\uacbd 1,260</span><span class="dim-chip">\uc11c\ub77c\uc6b4\ub4dc\uc804 2,180</span><span class="dim-chip">\uc804\uccb4 2,300</span><span class="dim-chip">\uae4a\uc774 590</span><span class="dim-chip">\uc88c/\uc6b0 \ub9c8\uac10 30</span></div>'
+      + '<div style="font-size:10.5px;font-weight:700;margin-bottom:4px;">\ub808\uc774\uc544\uc6c3 \ub3c4\uba74 (\uc815\uba74)</div>'
+      + layoutSVG()
+      + '<div style="font-size:10.5px;font-weight:700;margin:11px 0 4px;">\ub3c4\uc5b4\u00b7\uc2ac\ub86f \uaddc\uaca9</div>'
+      + woTable([['\ubd80\uc704', '\uaddc\uaca9(\uac00\ub85c\u00d7\uc138\ub85c)', '\ube44\uace0'], ['\uc0c1\ubd80\uc7a5 \ub3c4\uc5b4', '596\u00d7340', '\ud50c\ub7a9'], ['\uc218\ub0a9 \ub3c4\uc5b4', '596\u00d7560', '\ub2e8\ubb38\u00b7\uc6b0\uacbd'], ['\uc11c\ub78d', '596\u00d7250', '2\ub2e8'], ['\ub0c9\uc7a5\uace0 \uac1c\uad6c\ubd80', '900\u00d71,800', '\uc88c/\uc6b0/\uc704 \uc5ec\uc720']])
+      + '<div style="font-size:9.5px;color:var(--ink-soft);margin-top:9px;line-height:1.6;border-top:1px dashed var(--line-soft);padding-top:7px;">\uc55e\ubc34\ub4dc(\uac00\ub9bc\ub9c9): <b>\uc788\uc74c</b> \u00b7 \uc0c1\ubd80\uc11c\ub77c\uc6b4\ub4dc: 100\u00d72400\u00d71 \u00b7 \ub3c4\uc5b4 \ud06c\uae30 = \uc7a5 \u22124mm</div>';
+  }
+
+  // 냉장고장 출력: 재단도(원판당 1장) → 레이아웃(1장). 품목별로 묶음.
+  function woPages() {
+    return [
+      { cap: '\uc7ac\ub2e8\ub3c4 \u00b7 \uc6d0\ud310 1/2 (\uc791\uc5c5\uc9c0\uc2dc\uc11c)', html: cutPage(1, 2, BOARD1) },
+      { cap: '\uc7ac\ub2e8\ub3c4 \u00b7 \uc6d0\ud310 2/2 (\uc791\uc5c5\uc9c0\uc2dc\uc11c)', html: cutPage(2, 2, BOARD2) },
+      { cap: '\ub808\uc774\uc544\uc6c3 \uc815\ubcf4 (\ubd80\uac00 1\uc7a5)', html: layoutPage() }
+    ];
+  }
+
+  function workOrderPreview() {
+    var sheets = woPages().map(function (p) {
+      return '<div class="kv" style="font-size:10px;color:var(--ink-faint);margin:2px 2px 0;">' + p.cap + '</div><div class="wo-sheet">' + p.html + '</div>';
+    }).join('');
+    return '<div class="fullpage">'
+      + '<div class="p-header"><span class="back" data-act="close" style="cursor:pointer;">←</span> 작업지시서 미리보기</div>'
+      + '<div class="p-body" style="background:#ecebe4;gap:8px;">'
+      + sheets
+      + '<div class="kv" style="font-size:10.5px;color:var(--ink-faint);text-align:center;">품목별로 묶음 · 재단도는 원판당 1장 + 레이아웃 1장 · 품목 사이 break-before: page · 붙박이장은 비실측(도면 없음)이라 제외</div></div>'
+      + '<div class="p-footer"><button class="btn-pri" data-act="print">인쇄 (window.print())</button>'
+      + '<button class="btn-out" data-act="close">닫기</button></div></div>';
+  }
+
+  /* ── 섹션 빌더 ── */
+  function customerSec() {
+    if (state.role === 'install') {
+      return '<div class="sec"><h4>고객 / 현장 정보</h4><div class="kv"><b>최OO</b> · 010-5678-9012 · 서울 구로구 OO로 5, 2층</div></div>';
+    }
+    return '<div class="sec"><h4>고객 / 현장 정보</h4>'
+      + '<div class="kv"><b>박OO</b> · 010-3456-7890<br>경기 부천시 OO로 33<br>특이사항: 공동현관 #1203, 주차 가능</div>'
+      + '<div class="kv" style="margin-top:5px;">고객 제공 사진 (조회만)</div>'
+      + '<div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div></div></div>';
+  }
+
+  function scheduleSec() {
+    if (state.role === 'install') {
+      return '<div class="sec" style="border-style:dashed;"><h4 style="color:var(--ink-faint);">일정 · 결제 — 시공 기사 미노출</h4>'
+        + '<div class="kv" style="font-size:11px;color:var(--ink-faint);">시공 일정은 [작업 목록] 카드에서 확인 · 결제·입금 확인은 실측 기사·관리자 권한</div></div>';
+    }
+    // 실측 단계 주문의 결제 상태는 계약금 대기/착수금 대기인데, 기사 화면에선 '착수금 대기'로만 표시.
+    // 착수금은 계약서 작성(총액 확정) 시 수령하므로 [착수금 입금 확인]은 실측 완료(계약 확정) 후에만 노출.
+    // 잔금 대기·완료는 이 화면에 나타나지 않음(잔금은 관리자).
+    var payLine;
+    if (state.downConfirmed) {
+      payLine = '<span class="badge b-green">착수금 입금 확인됨</span>';
+    } else if (state.stage === 'doneMeasure') {
+      payLine = '<span class="badge b-amber">착수금 대기</span> <span class="btn-xs" data-act="open" data-val="payment" style="margin-left:4px;cursor:pointer;">착수금 입금 확인</span>';
+    } else {
+      payLine = '<span class="badge b-amber">착수금 대기</span> <span class="kv" style="font-size:10.5px;color:var(--ink-faint);">· 착수금은 계약서 작성 시 수령</span>';
+    }
+    return '<div class="sec"><h4>일정 · 결제</h4>'
+      + '<div class="kv"><span class="badge b-blue">실측</span> 2026-06-12<br>'
+      + '<span style="display:inline-block;margin-top:5px;">' + payLine + '</span></div></div>';
+  }
+
+  function panelMeasureFridge() {
+    if (state.stage === 'before') {
+      return '<div class="kv" style="margin-bottom:2px;">실측 <span class="badge b-gray">미측정</span></div>'
+        + '<div class="area-empty"><div class="msg">실측을 시작하세요</div>'
+        + '<span class="start-btn" data-act="advance" data-val="partial" style="cursor:pointer;">실측 시작</span></div>';
+    }
+    return '<div class="kv" style="margin-bottom:4px;">실측 <span class="badge b-green">측정완료</span> '
+      + '<span class="btn-xs" data-act="toast" data-msg="실측 수정은 작업지시서 출력 전까지 가능 (T-1.2.1 위저드 재진입)" style="margin-left:4px;cursor:pointer;">수정</span></div>'
+      + '<div class="dims"><span class="dim-chip">내경 1,200</span><span class="dim-chip">외경 1,300</span><span class="dim-chip">전체 2,300</span><span class="dim-chip">깊이 590</span><span class="dim-chip">콘센트 ○</span></div>'
+      + '<div class="memo">실측 메모(편집 가능): 우측 벽 단차 있음</div>'
+      + '<div class="kv" style="margin-top:7px;">실측 참고 사진</div>'
+      + '<div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div><div class="thumb add">＋ 사진<br>추가</div></div>'
+      + layoutPreview();
+  }
+
+  function panelMeasureCloset() {
+    if (state.stage === 'before' || state.stage === 'partial') {
+      var act = state.stage === 'partial' ? 'advance' : 'toast';
+      return '<div class="kv" style="margin-bottom:2px;">실측 <span class="badge b-gray">미측정</span></div>'
+        + '<div class="area-empty" style="padding-top:6px;"><div class="msg" style="font-size:11.5px;">냉장고장이 아닌 품목은 실측 위저드 없이<br>바로 완료 처리해요</div>'
+        + '<span class="start-btn" data-act="' + act + '" data-val="allMeasured" data-msg="냉장고장 실측을 먼저 진행하면 전 품목 측정완료로 넘어가요" style="cursor:pointer;">실측 완료</span></div>';
+    }
+    return '<div class="kv" style="margin-bottom:4px;">실측 <span class="badge b-green">측정완료</span></div>'
+      + '<div class="kv" style="font-size:11.5px;color:var(--ink-faint);background:var(--paper);border-radius:7px;padding:8px 10px;">비냉장고장 품목 — 실측 위저드·치수·레이아웃 <b style="color:var(--ink-soft);">없음</b>. [실측 완료]로 측정완료 처리, 계약 금액 라인만 반영돼요.</div>'
+      + '<div class="memo" style="margin-top:8px;">실측 메모(편집 가능): 걸레받이 마감만 확인</div>';
+  }
+
+  function panelInstall(item) {
+    var measureBlock = item === 'fridge'
+      ? '<div class="kv" style="margin-bottom:2px;">실측 <span class="badge b-green">측정완료</span> <span class="btn-xs" data-act="open" data-val="measureView" style="margin-left:4px;cursor:pointer;">실측 조회</span></div>'
+        + '<div class="dims"><span class="dim-chip">내경 1,200</span><span class="dim-chip">전체 2,300</span><span class="dim-chip">깊이 590</span></div>'
+      : '<div class="kv" style="margin-bottom:2px;">실측 <span class="badge b-green">측정완료</span></div>'
+        + '<div class="kv" style="font-size:10.5px;color:var(--ink-faint);">실측 데이터 없음 (비냉장고장 — 도면·치수 없음)</div>';
+    var installBlock;
+    if (state.stage === 'beforeInstall') {
+      installBlock = '<div class="kv" style="margin:8px 0 2px;">시공 <span class="badge b-gray">미시공</span></div>'
+        + '<div class="area-empty" style="padding-top:4px;"><div class="msg">시공을 시작하세요</div>'
+        + '<span class="start-btn" data-act="advance" data-val="doneInstall" style="background:var(--teal);cursor:pointer;">시공 시작</span></div>';
+    } else {
+      installBlock = '<div class="kv" style="margin:8px 0 4px;">시공 <span class="badge b-green">시공완료</span> '
+        + '<span class="btn-xs" data-act="toast" data-msg="시공 내용 수정 (T-1.4 위저드 재진입) — 주문 단위 시공 완료 전까지" style="margin-left:4px;cursor:pointer;">시공 내용 수정</span></div>'
+        + '<div class="kv">시공 전 사진</div><div class="thumbs"><div class="thumb">🖼</div></div>'
+        + '<div class="kv" style="margin-top:6px;">시공 중간·완료 사진</div><div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div><div class="thumb">🖼</div></div>'
+        + '<div class="memo">시공 메모: 상부장 고정 완료, 우측 마감 코킹 처리</div>'
+        + '<div class="checkline" style="margin-top:6px;"><span class="box on">✓</span> AS 필요 — 우측 도어 경첩 점검</div>';
+    }
+    return measureBlock
+      + '<div style="border-top:1px dashed var(--line-soft);margin-top:8px;padding-top:2px;"></div>'
+      + installBlock;
+  }
+
+  function itemsSec() {
+    var fridgeTab = '냉장고장' + (fridgeMeasured() ? ' ✓' : '');
+    var closetTab = '붙박이장' + (closetMeasured() ? ' ✓' : '');
+    var panel;
+    if (state.role === 'install') { panel = panelInstall(state.tab); }
+    else { panel = state.tab === 'fridge' ? panelMeasureFridge() : panelMeasureCloset(); }
+    var head = state.role === 'install'
+      ? '<span class="spacer"></span><span class="btn-xs" data-act="open" data-val="items" style="cursor:pointer;">품목 변경</span>'
+      : '<span class="spacer"></span><span class="kv" style="font-size:10px;color:var(--ink-faint);">탭 클릭 시 전환</span>';
+    return '<div class="sec"><h4>품목 ' + head + '</h4>'
+      + '<div class="tabs">'
+      + '<span class="tab ' + (state.tab === 'fridge' ? 'on' : '') + '" data-act="tab" data-val="fridge" style="cursor:pointer;">' + fridgeTab + '</span>'
+      + '<span class="tab ' + (state.tab === 'closet' ? 'on' : '') + '" data-act="tab" data-val="closet" style="cursor:pointer;">' + closetTab + '</span>'
+      + '</div>'
+      + '<div style="border-top:1px dashed var(--line-soft);margin-top:9px;padding-top:6px;">' + panel + '</div></div>';
+  }
+
+  function calcSec() {
+    // 계약 금액은 계약서 작성 화면에서 input으로 입력되는 값(합계 자동 합산).
+    // 따라서 계약서 작성 전(allMeasured)에는 카드를 숨기고 하단 [계약서 작성] 버튼으로만 진입,
+    // 계약 확정(doneMeasure) 이후에만 확정 금액을 표시한다.
+    if (state.role !== 'measure' || state.stage !== 'doneMeasure') return '';
+    return '<div class="sec"><h4>계약 정보 (전 품목 합계)</h4>'
+      + '<div class="price-row"><span>냉장고장</span><span>1,200,000원</span></div>'
+      + '<div class="price-row"><span>붙박이장</span><span>650,000원</span></div>'
+      + '<div class="price-row total"><span>합계</span><span>1,850,000원</span></div>'
+      + '<div class="kv" style="margin-top:5px;">계약서 <span class="badge b-green">확정</span> · 계약서 작성 시 입력된 금액</div></div>';
+  }
+
+  function workOrderSec() {
+    if (state.role === 'measure' && state.stage === 'doneMeasure') {
+      return '<div class="sec"><h4>작업지시서 <span class="spacer"></span>'
+        + '<span class="btn-xs" data-act="open" data-val="workorder" style="cursor:pointer;">인쇄</span></h4>'
+        + '<div class="kv" style="font-size:10.5px;">계약 확정·실측 완료 후 발행 · [인쇄] 누르면 미리보기 · 비냉장고장 품목은 비대상</div></div>';
+    }
+    return '';
+  }
+
+  function footerHTML() {
+    if (state.role === 'install') {
+      if (state.stage === 'beforeInstall') {
+        return '<span class="p-btn disabled">시공 완료</span><span class="foot-hint">미시공 품목이 있습니다</span>';
+      }
+      return '<span class="p-btn" data-act="toast" data-msg="진행 상태 → 시공 완료 전이 · 작업 목록 복귀 (이후 보수는 AS)" style="cursor:pointer;">시공 완료</span>';
+    }
+    if (state.stage === 'before' || state.stage === 'partial') {
+      return '<span class="p-btn disabled">실측 완료</span><span class="foot-hint">미측정 품목이 있습니다</span>';
+    }
+    if (state.stage === 'allMeasured') {
+      return '<span class="p-btn" data-act="advance" data-val="doneMeasure" style="cursor:pointer;">계약서 작성</span>'
+        + '<span class="p-btn disabled">실측 완료</span><span class="foot-hint">계약서 확정 필요</span>';
+    }
+    return '<span class="p-btn outline" data-act="toast" data-msg="작업 목록으로 복귀 (진행 상태: 실측 완료)" style="cursor:pointer;">작업 목록으로</span>'
+      + '<span class="foot-hint" style="color:var(--ink-faint);">진행 상태: 실측 완료 — 작업지시서 발행됨</span>';
+  }
+
+  /* ── 오버레이 ── */
+  // 기사 화면의 입금 확인은 착수금만(실측 완료·계약 확정 단계에서 열림). 잔금은 관리자 전용.
+  function paymentSheet() {
+    var amountBox = '<div style="border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:4px;">'
+      + '<span style="flex:1;">' + won(DOWN) + '</span></div>';
+    return '<div class="ov-backdrop" data-act="close"></div>'
+      + '<div class="sheet"><div class="grab"></div>'
+      + '<h4 style="font-size:14px;font-weight:700;">착수금 입금 확인</h4>'
+      + '<div class="kv" style="margin-top:-4px;"><span class="badge b-amber">착수금 대기</span> 현장에서 받은 착수금을 확인 처리합니다.</div>'
+      + '<div class="sec" style="padding:10px 11px;"><h4>입금 금액</h4>'
+      + amountBox
+      + '<div class="kv" style="font-size:10.5px;margin-top:5px;">착수금 = 총액 ' + won(TOTAL) + ' × 30% = ' + won(DOWN) + ' · 수정 가능</div></div>'
+      + '<div class="sec" style="padding:10px 11px;"><h4>결제 방법</h4>'
+      + '<div style="display:flex;gap:6px;"><span class="tab on" style="flex:1;text-align:center;">카드</span><span class="tab" style="flex:1;text-align:center;">현금</span><span class="tab" style="flex:1;text-align:center;">계좌이체</span></div>'
+      + '<div style="display:flex;gap:6px;align-items:center;margin-top:8px;"><span style="flex:1;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:12px;color:var(--ink-soft);">카드사 선택 ▾</span></div></div>'
+      + '<button class="btn-pri" data-act="confirmDown">착수금 입금 확인</button>'
+      + '<button class="btn-out" data-act="close">닫기</button></div>';
+  }
+
+  function itemsSheet() {
+    return '<div class="ov-backdrop" data-act="close"></div>'
+      + '<div class="sheet"><div class="grab"></div>'
+      + '<h4 style="font-size:14px;font-weight:700;">품목 변경</h4>'
+      + '<div class="kv" style="margin-top:-4px;">현장에서 본인이 실측까지 맡는 품목을 추가합니다.</div>'
+      + '<div class="sec" style="padding:8px 11px;">'
+      + '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;"><b style="flex:1;">냉장고장</b><span class="badge b-gray">시공 전</span></div>'
+      + '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line-soft);"><b style="flex:1;">붙박이장</b><span class="badge b-teal">시공중</span></div>'
+      + '<div class="kv" style="font-size:10.5px;margin-top:5px;color:var(--ink-faint);">품목 취소는 실측 기사만 가능합니다.</div></div>'
+      + '<div class="sec" style="padding:8px 11px;"><h4 style="margin-bottom:7px;">＋ 품목 추가</h4>'
+      + '<div style="display:flex;gap:6px;align-items:center;"><span style="flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;color:var(--ink-soft);">품목 종류 선택 ▾</span><span class="btn-xs" data-act="toast" data-msg="본인 실측 담당 품목 추가 (order_item 생성)" style="background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer;">추가</span></div>'
+      + '<div class="kv" style="font-size:10.5px;margin-top:5px;">냉장고장 · 붙박이장 · 신발장 · 싱크대</div></div>'
+      + '<div class="toast" style="background:var(--warn-bg);color:var(--warn);border:1px solid #ecd3a6;font-size:11px;align-items:flex-start;">⚠ 품목을 추가하면 계약 확정이 무효화되어 계약서를 다시 작성해야 합니다.</div>'
+      + '<button class="btn-pri" data-act="close">완료</button>'
+      + '<button class="btn-out" data-act="close">닫기</button></div>';
+  }
+
+  function measureViewPage() {
+    return '<div class="fullpage">'
+      + '<div class="p-header"><span class="back" data-act="close" style="cursor:pointer;">←</span> 실측 결과 (조회)</div>'
+      + '<div class="p-body">'
+      + '<div class="sec"><h4>냉장고장 <span class="spacer"></span><span class="badge b-green">측정완료</span></h4>'
+      + '<div class="kv" style="margin-bottom:6px;">치수 요약 (mm)</div>'
+      + '<div class="dims"><span class="dim-chip">내경 1,200</span><span class="dim-chip">외경 1,260</span><span class="dim-chip">서라운드전 2,180</span><span class="dim-chip">전체 2,300</span><span class="dim-chip">깊이 590</span><span class="dim-chip">좌 마감 30</span><span class="dim-chip">우 마감 30</span></div></div>'
+      + '<div class="sec"><h4>레이아웃 도면</h4>' + layoutGrid() + '<div class="kv" style="font-size:10.5px;margin-top:5px;">앞밴드(가림막) 있음 · 도어 크기 = 장 −4mm</div></div>'
+      + '<div class="sec"><h4>실측 참고 사진 · 메모</h4><div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div></div><div class="memo">콘센트 좌측 하단 · 천장 몰딩 간섭 주의</div></div>'
+      + '</div>'
+      + '<div class="p-footer"><button class="btn-out" data-act="close">닫기</button></div></div>';
+  }
+
+  function errorSheet() {
+    return '<div class="ov-backdrop" data-act="close"></div>'
+      + '<div class="sheet"><div class="grab"></div>'
+      + '<h4 style="font-size:14px;font-weight:700;">에러 토스트 예시</h4>'
+      + '<div class="toast err">⚠ 10MB 이하의 사진만 업로드할 수 있습니다.</div>'
+      + '<div class="toast err">⚠ 사진은 분류별 최대 30장까지 업로드할 수 있습니다.</div>'
+      + '<div class="toast err">⚠ 사진 업로드에 실패했습니다. 네트워크를 확인하고 다시 시도해주세요.</div>'
+      + '<div class="toast err">⚠ 완료 처리에 실패했습니다. 잠시 후 다시 시도해주세요.</div>'
+      + '<button class="btn-out" data-act="close">닫기</button></div>';
+  }
+
+  function overlayHTML() {
+    if (!state.overlay) return '';
+    if (state.overlay === 'payment') return paymentSheet();
+    if (state.overlay === 'items') return itemsSheet();
+    if (state.overlay === 'measureView') return measureViewPage();
+    if (state.overlay === 'workorder') return workOrderPreview();
+    if (state.overlay === 'error') return errorSheet();
+    return '';
+  }
+
+  function toastHTML() {
+    return state.toast ? '<div class="toast-host"><div class="toast-msg">' + state.toast + '</div></div>' : '';
+  }
+
+  function controlsHTML() {
+    var roleBtns = Object.keys(ROLES).map(function (r) {
+      return '<button data-act="role" data-val="' + r + '" class="' + (state.role === r ? 'on' : '') + '">' + ROLES[r].label + '</button>';
+    }).join('');
+    var stepBtns = ROLES[state.role].stages.map(function (s, i) {
+      return '<button class="step ' + (state.stage === s ? 'on' : '') + '" data-act="stage" data-val="' + s + '"><span class="n">' + (i + 1) + '</span>' + STAGE_LABEL[s] + '</button>';
+    }).join('');
+    return '<div class="ctrl-row"><span class="ctrl-label">역할</span><div class="seg">' + roleBtns + '</div>'
+      + '<span class="hint-lite">역할에 따라 화면 구성·완료 액션이 달라집니다.</span></div>'
+      + '<div class="ctrl-row"><span class="ctrl-label">진행</span><div class="steps">' + stepBtns + '</div>'
+      + '<span class="hint-lite">기사 화면 결제 표시는 착수금 대기 고정 · 착수금 입금 확인은 실측 완료 후</span></div>'
+      + '<div class="ctrl-row"><span class="ctrl-label">기타</span>'
+      + '<button class="link-btn" data-act="open" data-val="error">에러 토스트 예시 보기</button>'
+      + '<span class="hint-lite">품목 탭·하단 버튼·시트 모두 클릭 가능</span></div>';
+  }
+
+  function render() {
+    document.getElementById('controls').innerHTML = controlsHTML();
+    var body = customerSec() + scheduleSec() + itemsSec() + calcSec() + workOrderSec();
+    var html = '<div class="p-header"><span class="back">←</span> 주문 상세</div>'
+      + '<div class="p-body">' + body + '</div>'
+      + '<div class="p-footer">' + footerHTML() + '</div>'
+      + overlayHTML() + toastHTML();
+    document.getElementById('phone').innerHTML = html;
+    var pr = document.getElementById('print-root');
+    if (pr) pr.innerHTML = (state.overlay === 'workorder') ? woPages().map(function (p) { return '<div class="wo-page">' + p.html + '</div>'; }).join('') : '';
+  }
+
+  var toastTimer = null;
+  function flashToast(msg) {
+    state.toast = msg || null;
+    if (toastTimer) clearTimeout(toastTimer);
+    if (msg) { toastTimer = setTimeout(function () { state.toast = null; render(); }, 2800); }
+  }
+  function advanceMsg(s) {
+    return ({
+      partial: '냉장고장 실측완료 처리 (위저드 결과 반영)',
+      allMeasured: '전 품목 측정완료 — 계약서 작성 가능',
+      doneMeasure: '계약 확정 + 실측 완료 → 작업지시서 발행',
+      doneInstall: '전 품목 시공완료 처리'
+    })[s] || '';
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el) return;
+    var act = el.getAttribute('data-act');
+    var val = el.getAttribute('data-val');
+    switch (act) {
+      case 'role': state.role = val; state.stage = ROLES[val].stages[0]; state.tab = 'fridge'; state.downConfirmed = false; state.overlay = null; flashToast(null); break;
+      case 'stage': state.stage = val; state.downConfirmed = false; state.overlay = null; break;
+      case 'tab': state.tab = val; break;
+      case 'confirmDown': state.downConfirmed = true; state.overlay = null; flashToast('착수금 입금 확인 — 결제 상태 착수금 대기 → 잔금 대기'); break;
+      case 'open': state.overlay = val; break;
+      case 'close': state.overlay = null; break;
+      case 'advance': state.stage = val; state.downConfirmed = false; state.overlay = null; flashToast(advanceMsg(val)); break;
+      case 'print': window.print(); break;
+      case 'toast': flashToast(el.getAttribute('data-msg')); break;
+    }
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>

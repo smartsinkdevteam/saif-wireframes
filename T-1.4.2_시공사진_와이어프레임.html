@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.4.2 시공 중간·완료 사진 (시공 위저드 2단계) — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1240px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .stage { max-width: 1240px; margin: 0 auto; display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; max-width: 360px; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+  .phone { width: 360px; height: 780px; background: #f3f2ee; border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .p-header { padding: 14px 16px 8px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; background: var(--surface); }
+  .p-header .back { font-size: 16px; color: var(--ink-soft); font-weight: 400; }
+  .p-header .item-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 3px 10px; }
+  .stepper { display: flex; align-items: center; justify-content: center; padding: 6px 30px 10px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 76px; }
+  .step .dot { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--ink-faint); background: var(--surface); }
+  .step.done .dot { border-color: var(--accent); color: var(--accent); }
+  .step.cur .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step .lb { font-size: 9.5px; color: var(--ink-faint); }
+  .step.cur .lb { color: var(--accent); font-weight: 700; }
+  .step-line { flex: 1; height: 1.5px; background: var(--line-soft); margin-bottom: 13px; max-width: 30px; }
+  .p-body { flex: 1; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surface); border-radius: 14px; padding: 12px 14px; }
+  .card h6 { font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .card h6 .req { color: var(--error); }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ph { aspect-ratio: 1; background: linear-gradient(135deg, #e2e0d8, #cfccc2); border-radius: 10px; position: relative; }
+  .ph .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 1px solid #fca5a5; color: #f87171; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .add-btn { aspect-ratio: 1; border: 1.5px dashed var(--line); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--ink-faint); font-size: 10px; background: var(--paper); }
+  .add-btn .plus { font-size: 20px; line-height: 1; }
+  .hint { font-size: 10.5px; color: var(--ink-faint); line-height: 1.6; margin-top: 8px; }
+  .field-err { font-size: 10.5px; color: var(--error); margin-top: 8px; }
+  .empty { text-align: center; padding: 26px 0 10px; }
+  .empty .ico { font-size: 30px; margin-bottom: 8px; }
+  .empty p { font-size: 12px; color: var(--ink-soft); line-height: 1.7; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 12px; font-size: 12px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+  .p-footer { padding: 10px 14px 14px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; background: var(--surface); }
+  .p-btn { flex: 1; text-align: center; font-size: 13.5px; padding: 12px 0; border-radius: 10px; background: var(--ink); color: #fff; font-weight: 600; }
+  .p-btn.outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 400; }
+  .p-btn.dim { opacity: 0.35; }
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1240px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>T-1.4.2 시공 중간·완료 사진 <small>시공 위저드 2/3 단계 / 시공 기사 / 모바일 웹·PWA / 케이스 3종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본<small>완료 사진 1장 이상 → [다음] 활성</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 시공 작업 <span class="item-tag">시공 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 전 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">시공 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">특이사항·메모</span></div>
+      </div>
+      <div class="p-body">
+        <div class="card">
+          <h6>시공 중간·완료 사진 <span class="req">*</span> <span class="marker">1</span></h6>
+          <div class="photo-grid">
+            <div class="ph"><span class="del">×</span></div>
+            <div class="ph"><span class="del">×</span></div>
+            <div class="add-btn"><span class="plus">＋</span>사진 추가</div>
+          </div>
+          <p class="hint">분류 "시공 완료"로 저장 <span class="marker">2</span> · 시공 완료 사진 1장 이상 필수 · 장당 최대 10MB, 분류별 최대 30장 (JPG/PNG/HEIC) · 시공 완료 사진은 정산 증빙으로 필수입니다 <span class="marker">3</span></p>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전 <span class="marker" style="background:var(--paper);color:var(--ink);">4</span></span>
+        <span class="p-btn">다음 <span class="marker" style="background:#fff;color:var(--ink);">5</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 사진 없음 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 완료 사진 없음<small>[다음] 비활성 + 에러</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 시공 작업 <span class="item-tag">시공 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">시공 전 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">시공 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">특이사항·메모</span></div>
+      </div>
+      <div class="p-body">
+        <div class="card">
+          <h6>시공 중간·완료 사진 <span class="req">*</span></h6>
+          <div class="empty">
+            <div class="ico">📷</div>
+            <p>시공 완료 사진을 1장 이상<br>촬영해야 다음 단계로 이동할 수 있습니다.</p>
+          </div>
+          <div class="photo-grid"><div class="add-btn"><span class="plus">＋</span>사진 추가</div></div>
+          <p class="field-err">시공 완료 사진을 1장 이상 업로드해주세요. <span class="marker">6</span></p>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn dim">다음 <span class="marker" style="background:#fff;color:var(--ink);">7</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 에러 토스트 -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 에러<small>용량·장수 초과 / 업로드 실패</small></div>
+    <div class="phone" style="height:auto;">
+      <div class="p-body" style="gap:8px; padding:16px 12px;">
+        <div class="toast">⚠ 시공 완료 사진을 1장 이상 업로드해주세요. <span class="marker" style="margin-left:auto;">8</span></div>
+        <div class="toast">⚠ 사진은 장당 10MB 이하, 분류별 최대 30장까지 업로드할 수 있습니다.</div>
+        <div class="toast">⚠ 사진 업로드에 실패했습니다. 네트워크를 확인하고 다시 시도해주세요.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.4 · T-1.4.2 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 시공 중간·완료 사진 업로드: [사진 추가] → 카메라/갤러리. 시공 완료 사진 최소 1장 필수 = [다음] 활성 조건.</li>
+    <li><span class="marker">2</span> 업로드 사진은 분류 "시공 완료"로 해당 품목에 저장 — T-1.1.1 품목 탭 시공 영역에서 조회.</li>
+    <li><span class="marker">3</span> 유효성: 장당 10MB·분류별 30장·JPG/PNG/HEIC. 시공 완료 사진은 정산 증빙으로 필수(PRD 6장 사진 정책) — 명세 그대로.</li>
+    <li><span class="marker">4</span> [이전]: [T-1.4.1]로 이동(입력값 유지).</li>
+    <li><span class="marker">5</span> [다음]: 시공 완료 사진 1장 이상 시 활성 → 임시 저장 후 [T-1.4.3]으로 이동.</li>
+    <li><span class="marker">6</span> "시공 완료 사진을 1장 이상 업로드해주세요." — 명세 문구 그대로(필드 하단 + 토스트 병행 표현).</li>
+    <li><span class="marker">7</span> 조건 미충족 시 [다음] 비활성.</li>
+    <li><span class="marker">8</span> 에러: 완료 사진 미충족 / 용량·장수 초과(명세 문구) / 업로드 실패(임의, T-1.1.1 준용).</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>중간 사진과 완료 사진을 한 그리드에 받는 표현 — 명세상 분류는 "시공 완료" 단일이므로 통합 그리드로 그림. 중간/완료를 시각적으로 구분할지 확정 필요.</li>
+    <li>빈 상태 안내 문구, 비활성 [다음]+에러 병행 표시 방식, 업로드 실패 문구는 임의.</li>
+  </ol>
+</div>
+
+</body>
+</html>

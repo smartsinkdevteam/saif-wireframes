@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-3.3 기사 상세 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1180px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .case-label { max-width: 1180px; margin: 36px auto 10px; font-size: 14px; font-weight: 700; }
+  .case-label small { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; margin-left: 8px; }
+
+  .screen { max-width: 1180px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; }
+  .gnb { width: 188px; flex-shrink: 0; border-right: 1px solid var(--line-soft); padding: 18px 12px; font-size: 13px; }
+  .gnb .logo { font-size: 15px; font-weight: 700; padding: 4px 10px 18px; }
+  .gnb .item { padding: 8px 10px; border-radius: 6px; color: var(--ink-soft); margin-bottom: 2px; }
+  .gnb .item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; min-width: 0; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  .profile-chip { font-size: 12.5px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; background: var(--surface); }
+
+  .btn { font-size: 13px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: default; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 99px; }
+  .b-gray { background: #f1efe8; color: #5f5e5a; }
+  .b-blue { background: var(--accent-bg); color: #0c447c; }
+  .b-teal { background: #e1f5ee; color: #0f6e56; }
+  .b-purple { background: #eeedfe; color: #534ab7; }
+  .b-green { background: #eaf3de; color: #3b6d11; }
+
+  .detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .detail-head h2 { font-size: 18px; font-weight: 700; }
+  .detail-head .spacer { flex: 1; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); }
+  .toggle .tr { width: 34px; height: 18px; border-radius: 99px; background: var(--accent); position: relative; }
+  .toggle .tr::after { content: ""; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .toggle.off .tr { background: var(--line); }
+  .toggle.off .tr::after { right: auto; left: 2px; }
+
+  .section { border: 1px solid var(--line-soft); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .section h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
+  .kv { display: grid; grid-template-columns: 130px 1fr 130px 1fr; gap: 9px 12px; font-size: 13px; }
+  .kv .k { color: var(--ink-faint); font-size: 12px; padding-top: 1px; }
+  .kv .v.full-v { grid-column: 2 / -1; }
+  .kv .v.none { color: var(--ink-faint); }
+  .doc-chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-soft); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; }
+
+  .sched-item { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; }
+  .sched-item:last-child { border-bottom: none; }
+  .sched-item .d { color: var(--ink-soft); width: 86px; }
+  .sched-item .arrow { margin-left: auto; color: var(--ink-faint); }
+  .empty-line { font-size: 12.5px; color: var(--ink-faint); padding: 12px 0; text-align: center; }
+
+  .input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink); min-height: 36px; display: flex; align-items: center; }
+  .input-row { display: flex; gap: 8px; }
+  .input-row .input { flex: 1; }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .check-group { display: flex; gap: 18px; }
+  .box { width: 15px; height: 15px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hint { font-size: 11.5px; color: var(--ink-faint); }
+  .err-msg { font-size: 11.5px; color: var(--error); }
+
+  .modal-stage { max-width: 1180px; margin: 0 auto; min-height: 300px; background: rgba(44,44,42,0.45); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 24px; padding: 30px; flex-wrap: wrap; }
+  .modal { background: var(--surface); border-radius: 10px; width: 400px; max-width: 100%; padding: 20px 22px; }
+  .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { font-size: 13.5px; line-height: 1.7; }
+  .modal .pw-box { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.04em; margin: 12px 0 4px; }
+  .modal .pw-box .spacer { flex: 1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .warn-band { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-top: 10px; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .toast.err { background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1180px; margin: 28px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  @media (max-width: 860px) {
+    .screen { flex-direction: column; }
+    .gnb { width: 100%; border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .kv { grid-template-columns: 110px 1fr; }
+    .kv .v.full-v { grid-column: 2 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>A-3.3 기사 상세 <small>관리자 / 데스크톱 웹 / 케이스 5종</small></h1>
+</div>
+
+<!-- ───────── 케이스 1: 기본 (조회) ───────── -->
+<div class="case-label" style="margin-top:0;">케이스 1 — 기본 <small>조회 모드 · 활성 기사</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+
+    <div class="detail-head">
+      <h2>김기사 <span class="marker">1</span></h2>
+      <span class="badge b-green">활성</span>
+      <span class="spacer"></span>
+      <button class="btn sm">수정</button>
+      <button class="btn sm">임시 비밀번호 발급</button>
+      <span class="toggle"><span class="tr"></span> 활성</span>
+    </div>
+
+    <div class="section">
+      <h3>인적사항 <span class="marker">2</span></h3>
+      <div class="kv">
+        <span class="k">이름</span><span class="v">김기사</span>
+        <span class="k">휴대전화번호 (아이디)</span><span class="v">010-2222-3333</span>
+        <span class="k">담당 업무</span><span class="v"><span class="badge b-blue">실측</span></span>
+        <span class="k">취급 가능 품목</span><span class="v">냉장고장</span>
+        <span class="k">등록일</span><span class="v">2026-05-20</span>
+        <span class="k">차종</span><span class="v">포터(현대)</span>
+        <span class="k">차량번호</span><span class="v">12가 3456</span>
+        <span class="k">집주소</span><span class="v">인천 미추홀구 OO로 41, 102호</span>
+        <span class="k">사업자등록증</span>
+        <span class="v full-v"><span class="doc-chip">📄 사업자등록증.jpg <button class="btn sm">다운로드</button> <button class="btn sm">교체</button></span> <span class="marker">3</span></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 2: 수정 모드 ───────── -->
+<div class="case-label">케이스 2 — 수정 모드 <small>[수정] 클릭 시 인라인 편집 전환</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+
+    <div class="detail-head">
+      <h2>김기사</h2>
+      <span class="badge b-green">활성</span>
+      <span class="spacer"></span>
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">저장</button>
+    </div>
+
+    <div class="section">
+      <h3>인적사항 — 인라인 편집 <span class="marker">4</span></h3>
+      <div class="kv" style="grid-template-columns: 130px 1fr;">
+        <span class="k">이름</span><span class="v"><div class="input">김기사</div></span>
+        <span class="k">휴대전화번호 (아이디)</span>
+        <span class="v">
+          <div class="input">010-2222-3333</div>
+          <p class="hint" style="margin-top:4px;">변경 시 전체 시스템 중복 검증 · 변경 후 해당 기사는 새 번호로 로그인 <span class="marker">5</span></p>
+        </span>
+        <span class="k">담당 업무</span>
+        <span class="v"><div class="check-group"><span class="check"><span class="box on">✓</span> 실측</span><span class="check"><span class="box"></span> 시공</span></div></span>
+        <span class="k">취급 가능 품목</span><span class="v"><div class="check"><span class="box on">✓</span> 냉장고장</div></span>
+        <span class="k">차종</span><span class="v"><div class="input">포터(현대)</div></span>
+        <span class="k">차량번호</span><span class="v"><div class="input">12가 3456</div></span>
+        <span class="k">집주소</span>
+        <span class="v"><div class="input-row"><div class="input" style="background:var(--paper);">인천 미추홀구 OO로 41</div><button class="btn sm">주소 검색</button></div><div class="input" style="margin-top:6px;">102호</div></span>
+        <span class="k">사업자등록증</span><span class="v"><span class="doc-chip">📄 사업자등록증.jpg <button class="btn sm">교체</button></span></span>
+      </div>
+      <p class="hint" style="margin-top:10px;">등록일은 수정 불가(자동 기록). 선택 항목 미등록 시 "미등록" 표시.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 3: 임시 비밀번호 발급 ───────── -->
+<div class="case-label">케이스 3 — [임시 비밀번호 발급] <small>좌: 확인 모달 → 우: 결과 모달</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>임시 비밀번호 발급 <span class="marker">6</span></h3>
+    <p>김기사 기사의 임시 비밀번호를 발급하시겠습니까? 기존 비밀번호는 즉시 무효화됩니다.</p>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">발급</button>
+    </div>
+  </div>
+  <div class="modal">
+    <h3>임시 비밀번호가 발급되었습니다</h3>
+    <div class="pw-box">Tq8#vk2m <span class="spacer"></span><button class="btn sm">복사</button></div>
+    <p class="hint">해당 기사가 다음 로그인 시 비밀번호 변경이 강제됩니다. 새로고침하면 다시 조회할 수 없으니 지금 복사해 전달해주세요. <span class="marker">7</span></p>
+    <div class="modal-actions"><button class="btn sm primary">확인</button></div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 4: 비활성 전환 경고 ───────── -->
+<div class="case-label">케이스 4 — 비활성 전환 확인 <small>토글 클릭 · 다가올 배정 일정이 있는 경우 경고</small></div>
+<div class="modal-stage" style="min-height: 280px;">
+  <div class="modal">
+    <h3>기사를 비활성화할까요? <span class="marker">8</span></h3>
+    <p>비활성화하면 김기사 기사의 로그인이 차단됩니다.</p>
+    <div class="warn-band">⚠ 해당 기사가 배정된 다가올 일정이 2건 있습니다. 재배정이 필요합니다.</div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">비활성화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 5: 에러 ───────── -->
+<div class="case-label">케이스 5 — 에러 <small>담당 업무 축소 불가 / 임시 비밀번호 발급 실패</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 20px 26px; display:flex; flex-direction:column; gap:12px;">
+    <div>
+      <div class="check-group" style="margin-bottom:5px;"><span class="check"><span class="box on">✓</span> 실측</span><span class="check"><span class="box" style="border-color:var(--error);"></span> 시공 <span style="font-size:11px;color:var(--ink-faint);">(해제 시도)</span></span></div>
+      <span class="err-msg">현재 배정된 일정이 있어 담당 업무를 축소할 수 없습니다. 일정을 먼저 재배정해주세요. <span class="marker">9</span></span>
+    </div>
+    <div class="toast err">⚠ 임시 비밀번호 발급에 실패했습니다. 잠시 후 다시 시도해주세요.</div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 A-3.3 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 헤더: 기사 이름 + 상태 배지 + [수정] + [임시 비밀번호 발급] + [활성/비활성] 토글. 진입은 [A-3.1]에서 행 클릭.</li>
+    <li><span class="marker">2</span> 인적사항: 이름·휴대전화번호(아이디)·담당 업무·취급 품목·등록일 + 선택 항목(차종·차량번호·집주소·사업자등록증). 선택 항목 미등록 시 "미등록" 표시.</li>
+    <li><span class="marker">3</span> 사업자등록증 이미지: 다운로드·교체 가능.</li>
+    <li><span class="marker">4</span> [수정]: 편집 가능한 필드를 인라인 전환. 수정 가능: 이름·휴대전화번호·담당 업무·취급 품목·차종·차량번호·집주소·사업자등록증.</li>
+    <li><span class="marker">5</span> 휴대전화번호 변경: 전체 시스템 중복 검증(중복 시 "이미 등록된 휴대전화번호입니다."), 변경 후 새 번호로 로그인 필요.</li>
+    <li><span class="marker">6</span> 임시 비밀번호 발급 확인 모달: "OOO 기사의 임시 비밀번호를 발급하시겠습니까? 기존 비밀번호는 즉시 무효화됩니다." — 명세 문구 그대로.</li>
+    <li><span class="marker">7</span> 결과 모달: 임시 비밀번호 표시 + [복사]. 다음 로그인 시 강제 변경(S-0.4 자동 열림). 같은 화면 세션에서는 재열람 가능하나 새로고침 시 재조회 불가.</li>
+    <li><span class="marker">8</span> 비활성 토글: 확인 모달 후 변경. 비활성 시 로그인 차단. 다가올 배정 일정이 있으면 경고 "해당 기사가 배정된 다가올 일정이 X건 있습니다. 재배정이 필요합니다." — 명세 문구 그대로.</li>
+    <li><span class="marker">9</span> 담당 업무 축소 에러: "현재 배정된 일정이 있어 담당 업무를 축소할 수 없습니다. 일정을 먼저 재배정해주세요." / 발급 실패: "임시 비밀번호 발급에 실패했습니다..."</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>스케줄 섹션(이번 달 배정 일정 리스트)은 06-12 결정으로 화면에서 제외 — 명세 동기화 완료. 비활성 토글 경고의 일정 건수 집계는 그대로 유지.</li>
+    <li>기사 삭제 버튼은 두지 않음 — 명세 비고(활성/비활성 토글로만 관리) 반영.</li>
+    <li>수정 모드의 헤더 버튼([취소]·[저장]) 구성, 비활성 확인 모달의 본문 문구·버튼 라벨, 임시 비밀번호 결과 모달의 안내 문구·예시값은 명세에 상세 정의 없음 — 임의 작성, 확정 필요.</li>
+    <li>토글 UI 형태는 임의 표현. 샘플 데이터는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

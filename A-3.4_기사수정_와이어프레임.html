@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-3.4 기사 수정 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+    --ok: #1d7a4f; --ok-bg: #e3f4ec;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1180px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .case-label { max-width: 1180px; margin: 36px auto 10px; font-size: 14px; font-weight: 700; }
+  .case-label small { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; margin-left: 8px; }
+
+  .screen { max-width: 1180px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; }
+  .gnb { width: 188px; flex-shrink: 0; border-right: 1px solid var(--line-soft); padding: 18px 12px; font-size: 13px; }
+  .gnb .logo { font-size: 15px; font-weight: 700; padding: 4px 10px 18px; }
+  .gnb .item { padding: 8px 10px; border-radius: 6px; color: var(--ink-soft); margin-bottom: 2px; }
+  .gnb .item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; min-width: 0; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  .profile-chip { font-size: 12.5px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; background: var(--surface); }
+  .crumb { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 4px; }
+  .crumb b { color: var(--ink-soft); font-weight: 600; }
+  .page-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .page-head h2 { font-size: 18px; font-weight: 700; }
+  .status-pill { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 99px; background: var(--ok-bg); color: var(--ok); }
+  .status-pill.off { background: #f1f0ea; color: var(--ink-soft); }
+
+  .btn { font-size: 13px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: default; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn.danger { border-color: #e3b6b6; color: var(--error); }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+
+  .section { border: 1px solid var(--line-soft); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .section h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; color: var(--ink-soft); }
+  .field label .req { color: var(--error); }
+  .field label .opt { color: var(--ink-faint); font-size: 11px; }
+  .input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink-faint); min-height: 36px; display: flex; align-items: center; }
+  .input.filled { color: var(--ink); }
+  .input.readonly { background: var(--paper); }
+  .input.error { border-color: var(--error); }
+  .input-row { display: flex; gap: 8px; }
+  .input-row .input { flex: 1; }
+  .err-msg { font-size: 11.5px; color: var(--error); }
+  .hint { font-size: 11.5px; color: var(--ink-faint); }
+  .hint.warn { color: var(--warn); }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .check-group { display: flex; gap: 18px; flex-wrap: wrap; }
+  .box { width: 15px; height: 15px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .box.err { border-color: var(--error); }
+  .box.radio { border-radius: 50%; }
+  .box.radio.on { background: var(--accent); border-color: var(--accent); }
+
+  .upload { border: 1.5px dashed var(--line); border-radius: 8px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--ink-faint); font-size: 12.5px; }
+  .file-row { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; }
+  .file-row .ico { font-size: 16px; }
+  .file-row .nm { color: var(--ink); font-weight: 600; }
+  .file-row .acts { margin-left: auto; display: flex; gap: 6px; }
+  .form-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .form-actions .right { margin-left: auto; display: flex; gap: 8px; }
+  .toast { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
+  .toast.ok { background: #eaf3de; color: #3b6d11; border: 1px solid #cfe3b4; }
+
+  .modal-stage { max-width: 1180px; margin: 0 auto; min-height: 280px; background: rgba(44,44,42,0.45); border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 30px; }
+  .modal { background: var(--surface); border-radius: 10px; width: 400px; max-width: 100%; padding: 20px 22px; }
+  .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .modal p { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); }
+  .modal .warn-band { margin-top: 12px; background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd8ae; border-radius: 8px; padding: 9px 12px; font-size: 12px; line-height: 1.55; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1180px; margin: 28px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  @media (max-width: 860px) {
+    .screen { flex-direction: column; }
+    .gnb { width: 100%; border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · A-3.2 기사 등록과 동일 스타일</div>
+  <h1>A-3.4 기사 수정 <small>관리자 / 데스크톱 웹 / 케이스 4종</small></h1>
+</div>
+
+<!-- ───────── 케이스 1: 기본 (값 채워짐) ───────── -->
+<div class="case-label" style="margin-top:0;">케이스 1 — 기본 <small>기사 상세(A-3.3) [수정]으로 진입 · 기존 값이 채워진 상태</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="crumb">기사 관리 › <b>김철수</b> › 수정 <span class="marker">1</span></div>
+    <div class="page-head"><h2>기사 수정</h2><span class="status-pill">활성</span></div>
+
+    <div class="section">
+      <h3>계정 정보 (필수)</h3>
+      <div class="grid">
+        <div class="field">
+          <label>이름 <span class="req">*</span></label>
+          <div class="input filled">김철수</div>
+        </div>
+        <div class="field">
+          <label>휴대전화번호 (아이디로 사용) <span class="req">*</span> <span class="marker">2</span></label>
+          <div class="input filled">010-1234-5678</div>
+          <p class="hint warn">⚠ 로그인 아이디예요. 변경하면 기사에게 새 번호를 알려줘야 해요.</p>
+        </div>
+        <div class="field full">
+          <label>비밀번호 <span class="marker">3</span></label>
+          <div class="input-row">
+            <div class="input">현재 비밀번호 유지 (보안상 표시하지 않음)</div>
+            <button class="btn sm">비밀번호 초기화</button>
+          </div>
+          <p class="hint">[비밀번호 초기화] 시 임시 비밀번호를 새로 생성해요. 수정 화면에서는 기존 비밀번호를 보여주지 않아요.</p>
+        </div>
+        <div class="field">
+          <label>담당 업무 <span class="req">*</span> <span class="marker">4</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box on">✓</span> 실측</span>
+            <span class="check"><span class="box"></span> 시공</span>
+          </div>
+          <p class="hint">둘 다 체크 가능 (겸임 기사) · 권한 분기에 직결</p>
+        </div>
+        <div class="field">
+          <label>취급 가능 품목 <span class="req">*</span> <span class="marker">5</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box on">✓</span> 냉장고장</span>
+            <span class="check"><span class="box on">✓</span> 붙박이장</span>
+            <span class="check"><span class="box"></span> 신발장</span>
+            <span class="check"><span class="box"></span> 싱크대</span>
+          </div>
+          <p class="hint">여러 품목 선택 가능 · 주문 배정 시 후보 필터에 사용</p>
+        </div>
+        <div class="field">
+          <label>상태 <span class="marker">6</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box radio on"></span> 활성</span>
+            <span class="check"><span class="box radio"></span> 비활성</span>
+          </div>
+          <p class="hint">비활성 시 신규 배정 후보에서 제외 (기존 배정·이력은 유지)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>추가 정보 (선택)</h3>
+      <div class="grid">
+        <div class="field">
+          <label>차종 <span class="opt">(선택)</span></label>
+          <div class="input filled">포터(현대) 1톤</div>
+        </div>
+        <div class="field">
+          <label>차량번호 <span class="opt">(선택)</span></label>
+          <div class="input filled">12가 3456</div>
+        </div>
+        <div class="field full">
+          <label>집주소 <span class="opt">(선택)</span></label>
+          <div class="input-row">
+            <div class="input readonly filled">인천 연수구 송도과학로 32</div>
+            <button class="btn sm">주소 검색</button>
+          </div>
+          <div class="input filled" style="margin-top:6px;">송도더샵 101동 1203호</div>
+        </div>
+        <div class="field full">
+          <label>사업자등록증 이미지 <span class="opt">(선택)</span> <span class="marker">7</span></label>
+          <div class="file-row">
+            <span class="ico">📄</span><span class="nm">사업자등록증.pdf</span>
+            <span class="acts"><button class="btn sm">보기</button><button class="btn sm">교체</button><button class="btn sm danger">삭제</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn">취소</button>
+      <div class="right"><button class="btn primary">저장 <span class="marker" style="background:#fff;color:var(--ink);">8</span></button></div>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 2: 유효성 에러 ───────── -->
+<div class="case-label">케이스 2 — 유효성 에러 <small>휴대전화번호 중복 · 필수 해제</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item">📋 주문 관리</div>
+    <div class="item active">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+    <div class="crumb">기사 관리 › 김철수 › 수정</div>
+    <div class="page-head"><h2>기사 수정</h2><span class="status-pill">활성</span></div>
+
+    <div class="section">
+      <h3>계정 정보 (필수)</h3>
+      <div class="grid">
+        <div class="field">
+          <label>이름 <span class="req">*</span></label>
+          <div class="input filled">김철수</div>
+        </div>
+        <div class="field">
+          <label>휴대전화번호 (아이디로 사용) <span class="req">*</span></label>
+          <div class="input error filled">010-2222-3333</div>
+          <span class="err-msg">이미 등록된 휴대전화번호입니다. <span class="marker">9</span></span>
+        </div>
+        <div class="field">
+          <label>담당 업무 <span class="req">*</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box err"></span> 실측</span>
+            <span class="check"><span class="box err"></span> 시공</span>
+          </div>
+          <span class="err-msg">담당 업무를 1개 이상 선택해주세요.</span>
+        </div>
+        <div class="field">
+          <label>취급 가능 품목 <span class="req">*</span></label>
+          <div class="check-group">
+            <span class="check"><span class="box err"></span> 냉장고장</span>
+            <span class="check"><span class="box err"></span> 붙박이장</span>
+            <span class="check"><span class="box err"></span> 신발장</span>
+            <span class="check"><span class="box err"></span> 싱크대</span>
+          </div>
+          <span class="err-msg">취급 가능한 품목을 1개 이상 선택해주세요.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn">취소</button>
+      <div class="right"><button class="btn primary">저장</button></div>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 3: 비활성화 확인 모달 ───────── -->
+<div class="case-label">케이스 3 — 비활성화 확인 모달 <small>상태를 [비활성]으로 바꾸고 저장 시</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>김철수 기사를 비활성화할까요? <span class="marker">A</span></h3>
+    <p>비활성화하면 새 주문 배정 후보에서 제외돼요. 기존에 배정된 작업과 과거 이력은 그대로 유지돼요.</p>
+    <div class="warn-band">⚠ 진행 중인 배정 작업 2건이 있어요. 비활성화해도 이 작업들은 계속 진행돼요.</div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary" style="background:var(--error);border-color:var(--error);">비활성화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 4: 저장 완료 ───────── -->
+<div class="case-label">케이스 4 — 저장 완료 <small>수정 후 [A-3.3 기사 상세]로 복귀 + 완료 토스트</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 18px 26px;">
+    <div class="toast ok">✓ 기사 정보가 수정되었습니다. <span class="marker" style="margin-left:auto;">B</span></div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>구성 (A-3.2 기사 등록과 동일 폼 · 수정 전용 차이만)</h3>
+  <ol>
+    <li><span class="marker">1</span> 진입: 기사 상세(A-3.3)의 [수정] → 이 화면(IA에 A-3.4 신설). 저장/취소 시 상세로 복귀. 등록(A-3.2)과 동일한 2섹션(계정 정보 / 추가 정보) 구조.</li>
+    <li><span class="marker">2</span> 휴대전화번호: 등록에선 본인 변경 불가였지만, 관리자 수정 화면에서는 변경 가능. 로그인 아이디라 변경 시 기사 안내 필요 경고. 중복 시 유효성 에러(케이스 2).</li>
+    <li><span class="marker">3</span> 비밀번호: 수정 화면은 기존 비밀번호를 표시하지 않음. 등록의 "초기 비밀번호 입력" 대신 [비밀번호 초기화](임시 비밀번호 재생성)로 대체.</li>
+    <li><span class="marker">4</span> 담당 업무(실측/시공): 기존 선택값 채워짐. 권한 분기 직결(실측=입금 확인 가능, 시공=일정·결제 미노출).</li>
+    <li><span class="marker">5</span> 취급 가능 품목: 다품목 반영 — 냉장고장·붙박이장·신발장·싱크대 체크박스 그룹(기존 선택값 채워짐). ※ 등록(A-3.2)은 현재 "냉장고장" 1개만 노출 → 등록도 동일 4종 그룹으로 맞추는 것을 권장(아래 동기화 항목).</li>
+    <li><span class="marker">6</span> 상태(활성/비활성): 등록엔 없는 수정 전용 필드(신규는 항상 활성). 비활성은 신규 배정 후보 제외, 기존 배정·이력 유지.</li>
+    <li><span class="marker">7</span> 사업자등록증: 기존 파일이 있으면 [보기]·[교체]·[삭제], 없으면 등록과 동일한 업로드 영역.</li>
+    <li><span class="marker">8</span> [저장]: 유효 시 반영 → [A-3.3]로 복귀, 완료 토스트(케이스 4). 상태를 비활성으로 바꿨으면 케이스 3 확인 모달 거침.</li>
+    <li><span class="marker">9</span> 휴대전화번호 중복: "이미 등록된 휴대전화번호입니다." (등록과 동일 문구).</li>
+    <li><span class="marker">A</span> 비활성화 확인 모달: 진행 중 배정이 있으면 건수 경고. 삭제가 아니라 soft 비활성(주문·이력 참조 보존).</li>
+    <li><span class="marker">B</span> 완료 토스트: "기사 정보가 수정되었습니다." 후 상세 복귀.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 명세/IA 동기화 · 확정 필요</h3>
+  <ol>
+    <li>A-3.4를 기능 명세서에도 추가(현재 IA에만 신설). 등록(A-3.2)과 동일 폼이되, ① 휴대전화번호 변경 허용+경고 ② 초기 비밀번호 입력 → [비밀번호 초기화] ③ 상태(활성/비활성) 필드 추가 ④ 사업자등록증 [보기·교체·삭제]가 수정 전용 차이.</li>
+    <li><b>취급 품목 4종 그룹</b>: 다품목 반영으로 등록·수정 모두 냉장고장·붙박이장·신발장·싱크대 체크박스 그룹이 되어야 일관됨. 등록(A-3.2) 와이어프레임도 동일하게 갱신 권장.</li>
+    <li>담당 업무 단일/복수(실측·시공 겸임), 전화번호 변경 시 기존 로그인 세션 처리, 비활성 기사의 진행 중 작업 재배정 정책 — 확정 필요.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>등록 화면의 CSS·레이아웃·섹션 구분을 그대로 사용. 상태 필드·[비밀번호 초기화]·파일 [보기/교체/삭제] 버튼 배치, 비활성화 모달 문구·샘플 값은 임의 표현 — 확정 필요.</li>
+    <li>샘플 데이터(이름·번호·주소·차량)는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>

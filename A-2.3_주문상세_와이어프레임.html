@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-2.3 주문 상세 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --ok: #3b6d11; --ok-bg: #eaf3de;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1180px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .case-label { max-width: 1180px; margin: 36px auto 10px; font-size: 14px; font-weight: 700; }
+  .case-label small { font-weight: 400; color: var(--ink-soft); font-size: 12.5px; margin-left: 8px; }
+
+  .screen { max-width: 1180px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; }
+  .gnb { width: 188px; flex-shrink: 0; border-right: 1px solid var(--line-soft); padding: 18px 12px; font-size: 13px; }
+  .gnb .logo { font-size: 15px; font-weight: 700; padding: 4px 10px 18px; }
+  .gnb .item { padding: 8px 10px; border-radius: 6px; color: var(--ink-soft); margin-bottom: 2px; }
+  .gnb .item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; min-width: 0; padding: 22px 26px; }
+  .topbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+  .profile-chip { font-size: 12.5px; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; background: var(--surface); }
+
+  .btn { font-size: 13px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: default; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+  .btn.disabled { color: #c4c2ba; border-color: var(--line-soft); background: var(--paper); }
+  .tooltip { font-size: 10.5px; color: var(--ink-faint); }
+
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 99px; }
+  .b-gray { background: #f1efe8; color: #5f5e5a; }
+  .b-blue { background: var(--accent-bg); color: #0c447c; }
+  .b-amber { background: var(--warn-bg); color: #633806; }
+  .b-green { background: var(--ok-bg); color: var(--ok); }
+  .b-coral { background: #faece7; color: #993c1d; }
+  .b-red { background: var(--error-bg); color: var(--error); }
+
+  /* 헤더 */
+  .detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .detail-head h2 { font-size: 18px; font-weight: 700; }
+  .detail-head .spacer { flex: 1; }
+
+  /* 진행 요약 배지 */
+  .progress-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .p-chip { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line-soft); border-radius: 8px; padding: 7px 12px; font-size: 12px; }
+  .p-chip .lbl { color: var(--ink-soft); }
+  .p-chip .val { font-weight: 700; }
+  .p-chip.done { border-color: #cfe3b4; background: var(--ok-bg); }
+  .p-chip.done .val { color: var(--ok); }
+  .p-chip.ing { border-color: #b5d4f4; background: var(--accent-bg); }
+  .p-chip.ing .val { color: var(--accent); }
+  .p-chip.wait .val { color: var(--ink-faint); }
+  .seg { display: inline-flex; gap: 2px; }
+  .seg i { width: 14px; height: 6px; border-radius: 2px; background: var(--line-soft); }
+  .seg i.f { background: currentColor; }
+
+  /* 섹션 */
+  .section { border: 1px solid var(--line-soft); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
+  .section h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section h3 .spacer { flex: 1; }
+  .kv { display: grid; grid-template-columns: 110px 1fr 110px 1fr; gap: 8px 12px; font-size: 13px; }
+  .kv .k { color: var(--ink-faint); font-size: 12px; padding-top: 1px; }
+  .kv .v.full-v { grid-column: 2 / -1; }
+  .sub-block { border-top: 1px dashed var(--line-soft); margin-top: 12px; padding-top: 12px; }
+  .sub-block h4 { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .sub-block h4 .spacer { flex: 1; }
+  .thumbs { display: flex; gap: 8px; }
+  .thumb { width: 56px; height: 56px; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--paper); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 16px; }
+  .empty-line { font-size: 12.5px; color: var(--ink-faint); padding: 14px 0; text-align: center; }
+
+  /* 품목 탭 */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line-soft); margin-bottom: 14px; }
+  .tab { font-size: 13px; padding: 8px 16px; color: var(--ink-soft); border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; }
+  .tab.on { border-color: var(--line-soft); background: var(--surface); color: var(--ink); font-weight: 700; margin-bottom: -1px; }
+  .checkline { display: flex; align-items: center; gap: 7px; font-size: 12.5px; padding: 3px 0; }
+  .box { width: 14px; height: 14px; border: 1.5px solid var(--line); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; }
+  .box.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .dims { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dim-chip { font-size: 11.5px; border: 1px solid var(--line-soft); border-radius: 6px; padding: 3px 8px; color: var(--ink-soft); background: var(--paper); }
+
+  /* 모달 */
+  .modal-stage { max-width: 1180px; margin: 0 auto; min-height: 340px; background: rgba(44,44,42,0.45); border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 30px; }
+  .modal { background: var(--surface); border-radius: 10px; width: 460px; max-width: 100%; padding: 20px 22px; }
+  .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .modal .sub { font-size: 12px; color: var(--ink-soft); margin-bottom: 14px; }
+  .modal .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .modal .field label { font-size: 12px; color: var(--ink-soft); }
+  .modal .field label .req { color: var(--error); }
+  .input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink-faint); min-height: 36px; display: flex; align-items: center; }
+  .input.filled { color: var(--ink); }
+  .input.area { min-height: 64px; align-items: flex-start; }
+  .caret { font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+  .radio-line { display: flex; align-items: center; gap: 7px; font-size: 13px; padding: 4px 0; }
+  .radio { width: 14px; height: 14px; border: 1.5px solid var(--line); border-radius: 50%; flex-shrink: 0; }
+  .radio.on { border-color: var(--accent); box-shadow: inset 0 0 0 3.5px var(--surface), inset 0 0 0 10px var(--accent); }
+  .radio-line.dim { color: #c4c2ba; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .info-band { background: var(--accent-bg); border: 1px solid #b5d4f4; border-radius: 7px; padding: 8px 11px; font-size: 11.5px; color: #0c447c; line-height: 1.55; }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .state-area { border: 1px solid var(--line-soft); border-radius: 8px; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+  .state-area .msg { font-size: 14px; color: var(--ink-soft); }
+  .state-area .sub-ic { font-size: 24px; color: var(--ink-faint); }
+
+  .notes { max-width: 1180px; margin: 28px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+
+  @media (max-width: 860px) {
+    .screen { flex-direction: column; }
+    .gnb { width: 100%; border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .kv { grid-template-columns: 100px 1fr; }
+    .kv .v.full-v { grid-column: 2 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 계약서 품목별 금액 표기(합계와 함께)·계약서 PDF 다운로드 제거 / 착수금 입금 처리 모달(상태 선택 없음)·금액·결제방법 / 비실측 품목 인쇄 제외</div>
+  <h1>A-2.3 주문 상세 <small>관리자 / 데스크톱 웹 / 케이스 7종</small></h1>
+</div>
+
+<!-- ───────── 케이스 1: 기본 (생산 단계, 부분진행) ───────── -->
+<div class="case-label" style="margin-top:0;">케이스 1 — 기본 <small>생산 단계 · 품목 2개 부분진행 예시</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item active">📋 주문 관리</div>
+    <div class="item">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+
+    <div class="detail-head">
+      <h2>주문 #2026-0128 <span class="marker">1</span></h2>
+      <span class="badge b-amber">생산</span>
+      <span style="color:var(--ink-faint);">·</span>
+      <span class="badge b-amber">잔금 대기</span>
+      <span class="spacer"></span>
+      <button class="btn sm">상태 변경</button>
+      <button class="btn sm">착수금 입금 처리</button>
+      <button class="btn sm">수정</button>
+    </div>
+
+    <div class="progress-row">
+      <div class="p-chip done"><span class="lbl">실측</span><span class="val">2/2</span><span class="seg" style="color:var(--ok);"><i class="f"></i><i class="f"></i></span><span class="marker">2</span></div>
+      <div class="p-chip ing"><span class="lbl">생산</span><span class="val">1/2 품목</span><span class="seg" style="color:var(--accent);"><i class="f"></i><i></i></span></div>
+      <div class="p-chip wait"><span class="lbl">시공</span><span class="val">0/2</span><span class="seg"><i></i><i></i></span></div>
+    </div>
+
+    <div class="section">
+      <h3>주문 정보 (공통) <span class="spacer"></span><span class="marker">3</span></h3>
+      <div class="kv">
+        <span class="k">고객명</span><span class="v">김OO</span>
+        <span class="k">연락처</span><span class="v">010-1234-5678</span>
+        <span class="k">주소</span><span class="v full-v">인천 연수구 OO로 12, 101동 1203호</span>
+        <span class="k">시공범위</span><span class="v">냉장고장 · 붙박이장</span>
+        <span class="k">실측일</span><span class="v">2026-06-09</span>
+        <span class="k">계약금</span><span class="v">50,000원</span>
+        <span class="k">결제방법</span><span class="v">카드 · 신한 끝 1234 <span class="marker">4</span></span>
+        <span class="k">특이사항</span><span class="v full-v">공동현관 #1203, 주차 가능</span>
+      </div>
+
+      <div class="sub-block">
+        <h4>고객 제공 사진 <span style="font-weight:400;color:var(--ink-faint);">(조회만 · 추가/삭제는 [수정])</span></h4>
+        <div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div></div>
+      </div>
+
+      <div class="sub-block">
+        <h4>계약서</h4>
+        <div class="kv" style="grid-template-columns: 1fr auto;">
+          <span class="k" style="color:var(--ink);">냉장고장</span><span class="v" style="text-align:right;">1,250,000원</span>
+          <span class="k" style="color:var(--ink);">붙박이장</span><span class="v" style="text-align:right;">600,000원</span>
+          <span class="k" style="border-top:1px solid var(--line-soft); padding-top:7px;">합계</span><span class="v" style="text-align:right; font-weight:700; border-top:1px solid var(--line-soft); padding-top:7px;">1,850,000원</span>
+          <span class="k">상태</span><span class="v" style="text-align:right;"><span class="badge b-green">확정</span> 2026-06-09</span>
+        </div>
+        <p class="tooltip" style="margin-top:8px;">품목별 금액은 계약서(T-1.3)에서 실측 기사가 입력한 값. 여기서는 조회만 <span class="marker">M</span></p>
+      </div>
+
+      <div class="sub-block">
+        <h4>실측 기사 배정 <span class="spacer"></span><button class="btn sm disabled">실측 배정 변경</button><span class="marker">5</span></h4>
+        <div class="kv">
+          <span class="k">기사</span><span class="v">김기사 (010-2222-3333)</span>
+          <span class="k">날짜</span><span class="v">2026-06-09 <span class="badge b-green">실측 완료</span></span>
+        </div>
+        <p class="tooltip" style="margin-top:6px;">완료된 작업은 변경할 수 없습니다.</p>
+      </div>
+
+      <div class="sub-block">
+        <h4>작업지시서 <span class="spacer"></span><button class="btn sm">작업지시서 인쇄</button><span class="marker">6</span></h4>
+        <p class="tooltip">실측 완료 이상에서 노출 · 클릭 시 품목 선택 팝업(케이스 6) → 품목당 개별 PDF</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>품목별 데이터 <span style="font-weight:400;color:var(--ink-faint);font-size:11.5px;">(기사 입력물 · 조회 전용)</span> <span class="spacer"></span><span class="marker">7</span></h3>
+      <div class="tabs">
+        <span class="tab on">냉장고장</span>
+        <span class="tab">붙박이장</span>
+      </div>
+
+      <div class="sub-block" style="border-top:none; margin-top:0; padding-top:0;">
+        <h4>실측 <span class="badge b-green">측정완료</span></h4>
+        <div class="dims">
+          <span class="dim-chip">내경 1,200</span><span class="dim-chip">외경 1,300</span><span class="dim-chip">서라운드전 2,150</span><span class="dim-chip">전체 높이 2,300</span><span class="dim-chip">깊이 590</span><span class="dim-chip">좌 30 / 우 30</span><span class="dim-chip">콘센트 있음</span>
+        </div>
+        <div class="kv" style="margin-top:10px;">
+          <span class="k">실측 메모</span><span class="v full-v">우측 벽 단차 있음, 걸레받이 철거 필요</span>
+        </div>
+        <div style="margin-top:10px;"><h4 style="margin-bottom:8px;">실측 참고 사진</h4>
+        <div class="thumbs"><div class="thumb">🖼</div><div class="thumb">🖼</div><div class="thumb">🖼</div></div></div>
+      </div>
+
+      <div class="sub-block">
+        <h4>생산 체크리스트 <span class="badge b-green">시공 준비됨</span> <span class="spacer"></span><span class="marker">8</span></h4>
+        <div class="checkline"><span class="box on">✓</span> 작업지시서 공장 전달</div>
+        <div class="checkline"><span class="box on">✓</span> 생산 완료</div>
+        <div class="checkline"><span class="box on">✓</span> 외부 발주 도착</div>
+      </div>
+
+      <div class="sub-block">
+        <h4>시공 기사 배정 (품목별) <span class="spacer"></span><button class="btn sm">시공 배정 변경</button><span class="marker">9</span></h4>
+        <div class="kv">
+          <span class="k">기사</span><span class="v">이기사 (010-4444-5555)</span>
+          <span class="k">날짜</span><span class="v">2026-06-20</span>
+        </div>
+      </div>
+
+      <div class="sub-block">
+        <h4>시공</h4>
+        <div class="empty-line">시공이 완료되면 표시됩니다.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 2: 접수 직후 ───────── -->
+<div class="case-label">케이스 2 — 접수 직후 <small>실측 전 · 기사 미배정 · 데이터 없음 상태</small></div>
+<div class="screen">
+  <nav class="gnb">
+    <div class="logo">SAIF</div>
+    <div class="item">🏠 대시보드</div>
+    <div class="item active">📋 주문 관리</div>
+    <div class="item">👷 기사 관리</div>
+  </nav>
+  <main class="main">
+    <div class="topbar"><span class="profile-chip">박관리 ▾</span></div>
+
+    <div class="detail-head">
+      <h2>주문 #2026-0131</h2>
+      <span class="badge b-gray">접수</span>
+      <span style="color:var(--ink-faint);">·</span>
+      <span class="badge b-amber">계약금 대기</span>
+      <span class="spacer"></span>
+      <button class="btn sm">상태 변경</button>
+      <button class="btn sm">착수금 입금 처리</button>
+      <button class="btn sm">수정</button>
+    </div>
+
+    <div class="progress-row">
+      <div class="p-chip wait"><span class="lbl">실측</span><span class="val">0/1</span><span class="seg"><i></i></span></div>
+      <div class="p-chip wait"><span class="lbl">생산</span><span class="val">0/1 품목</span><span class="seg"><i></i></span></div>
+      <div class="p-chip wait"><span class="lbl">시공</span><span class="val">0/1</span><span class="seg"><i></i></span></div>
+    </div>
+
+    <div class="section">
+      <h3>주문 정보 (공통)</h3>
+      <div class="kv">
+        <span class="k">고객명</span><span class="v">이OO</span>
+        <span class="k">연락처</span><span class="v">010-2345-6789</span>
+        <span class="k">주소</span><span class="v full-v">서울 강서구 OO길 8, 304호</span>
+        <span class="k">시공범위</span><span class="v">냉장고장</span>
+        <span class="k">실측일</span><span class="v">2026-06-18</span>
+        <span class="k">계약금</span><span class="v">-</span>
+        <span class="k">결제방법</span><span class="v">-</span>
+      </div>
+
+      <div class="sub-block">
+        <h4>계약서</h4>
+        <div class="empty-line">실측 후 계약서가 작성되면 표시됩니다.</div>
+      </div>
+
+      <div class="sub-block">
+        <h4>실측 기사 배정 <span class="spacer"></span><button class="btn sm primary">실측 기사 배정</button><span class="marker">A</span></h4>
+        <div class="empty-line">아직 배정된 실측 기사가 없습니다.</div>
+      </div>
+
+      <div class="sub-block">
+        <h4>작업지시서 <span class="spacer"></span><button class="btn sm disabled">작업지시서 인쇄</button></h4>
+        <p class="tooltip">실측 완료 후 인쇄 가능</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>품목별 데이터</h3>
+      <div class="tabs"><span class="tab on">냉장고장</span></div>
+      <div class="sub-block" style="border-top:none; margin-top:0; padding-top:0;">
+        <h4>실측 <span class="badge b-gray">미측정</span></h4>
+        <div class="empty-line">실측이 완료되면 표시됩니다.</div>
+      </div>
+      <div class="sub-block">
+        <h4>시공 기사 배정 (품목별) <span class="spacer"></span><button class="btn sm disabled">시공 기사 배정</button></h4>
+        <p class="tooltip">실측 완료 후 배정 가능 <span class="marker">B</span></p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ───────── 케이스 3: 상태 변경 모달 ───────── -->
+<div class="case-label">케이스 3 — [상태 변경] 모달 <small>현재 진행 상태에 따라 선택지 활성/비활성</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>상태 변경 <span class="marker">C</span></h3>
+    <p class="sub">현재 상태: 생산 · 잔금 대기</p>
+    <div class="radio-line"><span class="radio on"></span> 보류로 변경</div>
+    <div class="field" style="margin-left:21px;">
+      <label>보류 사유 <span class="req">*</span></label>
+      <div class="input area">1–500자</div>
+    </div>
+    <div class="radio-line"><span class="radio"></span> 종료 처리 <span class="tooltip">(사유 필수)</span></div>
+    <div class="radio-line"><span class="radio"></span> 취소 처리 <span class="tooltip">(사유 필수 · 영구 종결, 되돌릴 수 없음)</span></div>
+    <div class="radio-line dim"><span class="radio"></span> 보류 해제 <span class="tooltip">(현재 "보류"일 때만)</span></div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 4: 결제 상태 변경 모달 ───────── -->
+<div class="case-label">케이스 4 — [착수금 입금 처리] 모달 <small>관리자가 받아온 착수금을 입력 → 잔금 대기로 전이</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>착수금 입금 처리 <span class="marker">D</span></h3>
+    <p class="sub">현재 상태: 착수금 대기 → 처리 시 "잔금 대기"로 전이</p>
+    <div class="field">
+      <label>금액 <span class="req">*</span> <span class="marker">E</span></label>
+      <div class="input filled" style="font-weight:700;">200,000 <span style="font-weight:400;color:var(--ink-faint);margin-left:auto;">원</span></div>
+      <p class="tooltip">받아온 착수금 금액</p>
+    </div>
+    <div class="field">
+      <label>결제방법 <span class="req">*</span></label>
+      <div class="input filled">카드 <span class="caret">▾</span></div>
+      <p class="tooltip">현금 / 계좌이체 / 카드 / 상품권 / 기타 (공통 코드). "카드" 시 카드사·끝 4자리는 개발 단계 상세</p>
+    </div>
+    <div class="field">
+      <label>처리일 <span class="req">*</span></label>
+      <div class="input filled">2026-06-12</div>
+      <p class="tooltip">오늘 이하</p>
+    </div>
+    <div class="field">
+      <label>메모</label>
+      <div class="input area">선택 · 최대 500자</div>
+    </div>
+    <div class="info-band">착수금·잔금은 대부분 기사가 현장에서 받아오고, 계약서 [작성 완료](고객 서명+착수금 수령) 시 기사가 "착수금 대기"→"잔금 대기"로 전이. 이 모달은 관리자가 받아온 착수금을 직접 입력하는 용도(상태 선택 없이 입력 시 자동 전이). 모든 전이는 payment_events에 기록(금액·결제방법·처리자 포함) <span class="marker">F</span></div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">처리</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 5: 기사 배정 모달 ───────── -->
+<div class="case-label">케이스 5 — 기사 배정 모달 <small>실측(주문 단위)·시공(품목 단위) 공통 구성</small></div>
+<div class="modal-stage">
+  <div class="modal">
+    <h3>시공 기사 배정 — 냉장고장 <span class="marker">G</span></h3>
+    <p class="sub">실측 배정은 "실측 기사 배정" 제목으로 동일 구성 (주문 단위 1명)</p>
+    <div class="field">
+      <label>날짜 <span class="req">*</span></label>
+      <div class="input">클릭 시 [전체 스케줄] 모달 (A-2.2와 동일 · 건별 스택) <span class="caret">📅</span></div>
+      <p class="tooltip">실측: 주문의 실측일 기본값 / 시공: 실측일 이후 날짜</p>
+    </div>
+    <div class="field">
+      <label>기사 <span class="req">*</span></label>
+      <div class="input filled">이기사 (010-4444-5555) <span class="caret">▾</span></div>
+      <p class="tooltip">시공 담당 + 해당 품목 취급 가능 기사만 노출. 실측은 주문 시공범위 전 품목 취급 기사만 <span class="marker">H</span></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">배정</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 6: 작업지시서 품목 선택 팝업 ───────── -->
+<div class="case-label">케이스 6 — [작업지시서 인쇄] 품목 선택 팝업 <small>실측 도면 있는 품목만 · 비실측 품목 제외 · 품목당 개별 PDF</small></div>
+<div class="modal-stage" style="min-height:340px;">
+  <div class="modal">
+    <h3>작업지시서 인쇄 <span class="marker">I</span></h3>
+    <p class="sub">선택한 품목마다 개별 PDF가 생성됩니다. (기본 전체 선택)</p>
+    <div class="checkline"><span class="box on">✓</span> 냉장고장 <span class="badge b-green" style="margin-left:6px;">측정완료</span></div>
+    <div class="checkline" style="color:#c4c2ba;"><span class="box" style="background:var(--paper);"></span> 붙박이장 <span class="badge b-gray" style="margin-left:6px;">미측정</span> <span class="tooltip" style="margin-left:6px;">실측 완료 후 인쇄 가능</span></div>
+    <div class="checkline" style="color:#c4c2ba;"><span class="box" style="background:var(--paper);"></span> 신발장 <span class="badge b-green" style="margin-left:6px;">측정완료</span> <span class="tooltip" style="margin-left:6px;">비실측 품목 — 도면·자재 없어 인쇄 대상 아님 <span class="marker">J</span></span></div>
+    <div class="info-band" style="margin-top:10px;">PDF 내용(품목 단위): 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함 <span class="marker">K</span></div>
+    <div class="modal-actions">
+      <button class="btn sm">취소</button>
+      <button class="btn sm primary">인쇄</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 케이스 7: 에러 ───────── -->
+<div class="case-label">케이스 7 — 에러 <small>조회 실패 / 권한 없음</small></div>
+<div class="screen" style="display:block;">
+  <div style="padding: 20px 26px; display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+    <div class="state-area">
+      <div class="sub-ic">⚠</div>
+      <div class="msg">주문 정보를 불러올 수 없습니다.<br>잠시 후 다시 시도해주세요.</div>
+      <button class="btn sm">다시 시도</button>
+    </div>
+    <div class="state-area">
+      <div class="sub-ic">🔒</div>
+      <div class="msg">접근 권한이 없는 주문입니다. <span class="marker">L</span></div>
+      <button class="btn sm">주문 목록으로</button>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 A-2.3 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 헤더: 주문번호 + 진행 상태·결제 상태 배지("생산 · 잔금 대기" 통합 표시, 보류 시 "[보류]" 접두) + [상태 변경]·[착수금 입금 처리]·[수정]. 진행 상태 배지는 생략 가능(진행 요약 배지·목록과 일관). [상태 변경]은 품목 탭 아래에도 노출. [수정]은 종료·취소 시 비활성 → A-2.4.</li>
+    <li><span class="marker">2</span> 진행 요약 배지: 실측·시공 = n/N 품목 분수+세그먼트 바, 생산 = 시공 준비된 품목 수. 색상 완료=초록/진행 중=파랑/대기=회색. 배지 호버 시 품목별 상태 툴팁. 계약(보류/확정) 배지는 이 줄에 표시하지 않고 공통 영역 계약서 섹션에서만 표시(06-12 결정).</li>
+    <li><span class="marker">3</span> 공통 영역: 고객·현장, 계약금·결제방법, 고객 제공 사진(조회만), 계약서(품목별 금액·합계·상태), 실측 기사 배정, 작업지시서. 기사 입력물은 조회 전용.</li>
+    <li><span class="marker">4</span> 결제방법 카드 표시 형식: "카드 · 신한 끝 1234".</li>
+    <li><span class="marker">5</span> [실측 배정 변경]: 배정 후~실측 완료 전까지 활성. 실측 완료 후 잠금(비활성 + 사유 툴팁).</li>
+    <li><span class="marker">6</span> [작업지시서 인쇄]: 실측 완료 이상 노출, 도면 있는(측정완료·실측) 품목 0개면 비활성. 클릭 시 케이스 6 팝업.</li>
+    <li><span class="marker">7</span> 품목 탭: 품목마다 탭, 탭 안에 실측 영역 + 시공 영역(생산 체크리스트·시공 배정·시공 데이터). 미측정 "실측이 완료되면 표시됩니다." / 미시공 "시공이 완료되면 표시됩니다."</li>
+    <li><span class="marker">8</span> 생산 체크리스트(품목별): 진행 상태 "생산" 이상 노출. 작업지시서 공장 전달 / 생산 완료 / 외부 발주 도착(없으면 N/A). 전부 체크 시 "시공 준비됨" — 진척 표시일 뿐 진행 상태 자동 전환 없음.</li>
+    <li><span class="marker">9</span> 시공 기사 배정: 품목 단위(품목당 1명). 실측 완료 + 해당 품목 미배정 시 [시공 기사 배정], 배정 후~품목 시공완료 전 [시공 배정 변경].</li>
+    <li><span class="marker">A</span> [실측 기사 배정](최초): 접수 + 미배정 시 활성.</li>
+    <li><span class="marker">B</span> 비활성 버튼은 사유 툴팁 표시(예: "실측 완료 후 배정 가능").</li>
+    <li><span class="marker">C</span> 상태 변경 모달: 보류(사유 필수 1–500자)/보류 해제(보류일 때만)/종료(사유 필수)/취소(시공 완료·종료·취소 외, 영구 종결). 사유 미입력 시 "사유를 입력해주세요."</li>
+    <li><span class="marker">D</span> 착수금 입금 처리: 관리자가 받아온 착수금을 입력하는 모달. <b>"변경할 상태" 선택 없음</b> — 입력하면 "착수금 대기"→"잔금 대기"로 자동 전이. (※ 명세 A-2.3엔 [결제 상태 변경]이 5개 상태 자유 이동으로 적혀 있으나, 실제 운영은 착수금 받아온 입력만 하므로 이 모달로 단순화 — 명세 문구 정리 필요. 환불·운영 정정 등 그 외 상태 보정 경로는 추후/확정.)</li>
+    <li><span class="marker">E</span> <b>금액·결제방법(명세 반영)</b>: 입력 = <b>금액(숫자, 필수)</b> + <b>결제방법(셀렉트, 필수)</b> + 처리일(필수, 오늘 이하) + 메모(선택 500자). payment_events에 금액·결제방법 기록. (명세상 "잔금 완료" 전이 시 입력 금액을 총 시공 비용과 비교 검증 — 잔금 처리 흐름에 적용.)</li>
+    <li><span class="marker">F</span> <b>전이 주체(06-12 결정)</b>: 기존 "착수금 입금 시 계약서 자동 생성" 문구는 잘못이라 제거. 착수금·잔금은 대부분 기사가 현장에서 수령하며, 계약서 [작성 완료](고객 서명+착수금 수령) 시 "착수금 대기"→"잔금 대기"로 전이된다(계약서가 착수금보다 먼저 존재). 이 모달은 관리자가 받아온 착수금을 직접 입력해 같은 전이를 일으키는 경로. 모든 전이는 payment_events 기록.</li>
+    <li><span class="marker">G</span> 배정 모달(실측·시공 공통): 날짜(전체 스케줄 모달 재사용) + 기사 셀렉트. 1차는 시간 미지정·자동 중복 검증 없음.</li>
+    <li><span class="marker">H</span> 기사 후보 필터: 실측 = 시공범위 전 품목 취급 / 시공 = 해당 품목 취급. 이름·연락처 표시.</li>
+    <li><span class="marker">I</span> 품목 선택 팝업: 기본 전체 선택, 도면 있는 품목만 체크 가능. [인쇄] 시 품목당 개별 PDF(zip 묶음 여부는 개발 시 결정). PDF 생성 실패 시 "작업지시서를 생성하는 데 실패했습니다..."</li>
+    <li><span class="marker">J</span> <b>비실측 품목 제외(명세 반영)</b>: 미측정 품목은 비활성("실측 완료 후 인쇄 가능"). <b>냉장고장 외 비실측 품목은 측정완료여도 도면·자재가 없어 인쇄 대상에서 제외(measurements 부재로 판별).</b></li>
+    <li><span class="marker">K</span> <b>PDF 내용(명세 반영)</b>: 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함. (세부 서식은 개발 공유 디자인 시안서)</li>
+    <li><span class="marker">L</span> 에러: 조회 실패 / 권한 없음(다른 회사 주문) — 명세 문구 그대로.</li>
+    <li><span class="marker">M</span> <b>계약서 표시(이번 수정)</b>: 공통 영역 계약서는 <b>품목별 금액 + 합계 + 상태</b>를 보여준다(품목별 금액은 T-1.3에서 실측 기사가 입력한 값, 여기서는 조회만). <b>PDF 다운로드 버튼은 제거</b> — 고객 청구서 PDF가 필요하면 별도 [고객 청구서 PDF 발송] 경로로 처리(추후/확정).</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>1차도 한 주문에 여러 종류 품목을 받을 수 있어(같은 종류 1개씩) 케이스 1·6의 품목 2~3개 예시는 실제 1차 동작에 해당. 케이스 6의 신발장은 비실측(냉장고장 외) 품목이 측정완료여도 인쇄 대상에서 빠지는 것을 보이기 위한 예시.</li>
+    <li>주문번호 형식(#2026-0128), 진행 요약 배지의 칩 모양·세그먼트 바 디자인, 섹션·서브블록 구획은 임의 표현. 계약서 품목별 금액(냉장고장 1,250,000 / 붙박이장 600,000 = 1,850,000)은 합계에 맞춘 가상 샘플.</li>
+    <li>결제 상태 변경 모달의 금액 자동 채움·총액 비교 표기, 결제방법 셀렉트 옵션 노출은 개념 전달용 — 카드사·끝 4자리 추가 입력 노출 여부는 개발 단계 확정.</li>
+    <li>케이스 2의 빈 상태 문구, 케이스 3 라디오 선택형 UI, 케이스 7 버튼은 명세에 형식 정의 없음 — 확정 필요.</li>
+    <li>치수 요약 칩 표기, 에러 화면 2단 배치, 샘플 데이터는 전부 임의/가상.</li>
+  </ol>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.2.2 현장 영역 입력 — 설치 형태 → 치수 입력 (케이스)</title>
+<style>
+  :root{
+    --ink:#2c2c2a; --ink-soft:#5f5e5a; --ink-faint:#91908a;
+    --line:#d9d7cf; --line-soft:#e8e6df;
+    --paper:#fafaf7; --surface:#ffffff;
+    --accent:#185fa5; --accent-bg:#e6f1fb;
+    --error:#a32d2d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;background:var(--paper);color:var(--ink);padding:40px 24px 64px;}
+  .doc-head{max-width:1700px;margin:0 auto 20px;}
+  .doc-head .eyebrow{font-size:12px;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:6px;}
+  .doc-head h1{font-size:20px;font-weight:600;}
+  .doc-head h1 small{font-weight:400;color:var(--ink-soft);font-size:14px;margin-left:8px;}
+  .stage{max-width:1700px;margin:0 auto;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;align-items:flex-start;}
+  .phone-col{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .case-tag{font-size:13px;font-weight:700;max-width:340px;text-align:center;}
+  .case-tag small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;}
+  .phone{width:340px;height:752px;background:var(--surface);border:1px solid var(--line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;}
+  .p-header{padding:14px 16px 8px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .p-header .back{font-size:16px;color:var(--ink-soft);font-weight:400;}
+  .p-header .item-tag{margin-left:auto;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-bg);border-radius:99px;padding:3px 10px;}
+  .stepper{display:flex;align-items:center;justify-content:center;padding:6px 24px 10px;}
+  .step{display:flex;flex-direction:column;align-items:center;gap:3px;width:66px;}
+  .step .dot{width:25px;height:25px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink-faint);background:var(--surface);}
+  .step.done .dot{border-color:var(--accent);color:var(--accent);}
+  .step.cur .dot{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .step .lb{font-size:9.5px;color:var(--ink-faint);}
+  .step.cur .lb{color:var(--accent);font-weight:700;}
+  .step-line{flex:1;height:1.5px;background:var(--line-soft);margin-bottom:14px;max-width:32px;}
+  .p-body{flex:1;overflow-y:auto;padding:4px 15px 12px;display:flex;flex-direction:column;gap:9px;}
+  .sel-chip{align-self:flex-start;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-bg);border-radius:8px;padding:4px 9px;}
+  .toggle-row{display:flex;gap:24px;padding:2px 0;flex-wrap:wrap;}
+  .tg{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  .tg .tg-label{color:var(--ink-soft);}
+  .switch{width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;flex-shrink:0;}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.2);}
+  .switch.on{background:var(--accent);}
+  .switch.on .knob{left:18px;}
+  .switch.lock{background:var(--accent);opacity:0.55;}
+  .switch.lock .knob{left:18px;}
+  .tg .state{font-weight:700;}
+  .tg .state.on{color:var(--accent);}
+  .tg .state.off{color:var(--ink-faint);}
+  .tg .locktxt{font-size:10px;color:var(--ink-faint);}
+  .sec-label{font-size:12px;font-weight:700;color:var(--ink);margin-top:2px;}
+  .shapes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .shape-card{border:1.5px solid var(--line);border-radius:10px;padding:6px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--surface);}
+  .shape-card.sel{border-color:var(--accent);background:var(--accent-bg);}
+  .shape-card .lab{font-size:9px;color:var(--ink-soft);font-weight:600;line-height:1;text-align:center;}
+  .shape-card.sel .lab{color:var(--accent);}
+  .field{display:flex;align-items:center;gap:10px;}
+  .field label{font-size:12px;color:var(--ink-soft);width:100px;flex-shrink:0;}
+  .field label .req{color:var(--error);}
+  .input{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13px;background:var(--surface);color:var(--ink-faint);min-height:38px;display:flex;align-items:center;}
+  .input.filled{color:var(--ink);}
+  .input.error{border-color:var(--error);}
+  .input .unit{margin-left:auto;font-size:11px;color:var(--ink-faint);}
+  .err-msg{font-size:11px;color:var(--error);padding-left:110px;margin-top:-4px;}
+  .hint{font-size:10.5px;color:var(--ink-faint);line-height:1.5;}
+  .divider{height:1px;background:var(--line-soft);margin:3px 0;}
+  .common-box{border:1px dashed var(--accent);border-radius:10px;padding:10px 11px;background:var(--accent-bg);display:flex;flex-direction:column;gap:9px;}
+  .common-box .ph{font-size:11.5px;font-weight:700;color:var(--accent);}
+  .panel{border:1px solid var(--line-soft);border-radius:12px;padding:10px 11px;background:#fcfcfa;display:flex;flex-direction:column;gap:8px;}
+  .panel .ph{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .tag{font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;}
+  .tag-main{background:var(--accent);color:#fff;}
+  .tag-sub{background:#e1e7ef;color:var(--ink-soft);}
+  .chip{display:inline-block;font-size:10.5px;color:var(--accent);background:var(--accent-bg);border-radius:99px;padding:3px 9px;}
+  .bigwrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .facebtns{display:flex;gap:8px;}
+  .facebtn{flex:1;border:1.5px solid var(--line);border-radius:9px;padding:7px;font-size:11.5px;font-weight:700;color:var(--ink-soft);text-align:center;background:var(--surface);}
+  .facebtn.on{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);}
+  .facebtn small{display:block;font-weight:400;font-size:10px;color:var(--ink-faint);margin-top:2px;}
+  .facebtn.on small{color:var(--accent);}
+  .p-footer{padding:10px 15px 14px;border-top:1px solid var(--line-soft);display:flex;gap:8px;}
+  .p-btn{flex:1;text-align:center;font-size:13.5px;padding:12px 0;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;}
+  .p-btn.outline{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:400;}
+  .p-btn.disabled{background:var(--paper);color:#c4c2ba;border:1px solid var(--line-soft);font-weight:400;}
+  .marker{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;vertical-align:-3px;flex-shrink:0;}
+  .notes{max-width:1700px;margin:32px auto 0;font-size:13px;line-height:1.8;color:var(--ink-soft);}
+  .notes h3{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+  .notes ol{padding-left:20px;}
+  .notes li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 현장 영역 입력 = 설치 형태 선택(①) → 치수 입력(②) · 프리셋 3개(일자·코너 좌·우, ㄱ자 안쪽은 1차 제외) · 코너는 전체시공 고정·주면은 치수 화면에서 지정</div>
+  <h1>T-1.2.2 현장 영역 입력 <small>실측 위저드 2/3 · 기사 / 모바일 / 케이스 5종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 화면 ① 설치 형태 선택 -->
+  <div class="phone-col">
+    <div class="case-tag">화면 ① 설치 형태 선택<small>프리셋 5개에서 형태만 고르기 · 코너 ㄴ 선택 예시</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <div class="sec-label">설치 형태를 선택하세요 <span class="marker">1</span></div>
+        <div class="shapes">
+          <div class="shape-card" data-icon="flat"><span class="lab">일자</span></div>
+          <div class="shape-card sel" data-icon="nieun"><span class="lab">코너 (좌)</span></div>
+          <div class="shape-card" data-icon="nieunF"><span class="lab">코너 (우)</span></div>
+        </div>
+        <p class="hint">위에서 본 모양 · 굵은 선=벽, 점선=냉장고장 자리. 코너는 가구가 벽을 바깥에서 감싸는 형태(좌·우 한 쌍). <span class="marker">2</span></p>
+        <p class="hint">일자를 고르면 바로 다음, 코너를 고르면 다음 치수 화면에서 주 면을 지정합니다.</p>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">다음</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 화면 ② 치수 — 일자·전체시공 -->
+  <div class="phone-col">
+    <div class="case-tag">화면 ② 치수 — 일자 · 전체시공<small>치수 7개 전체</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <span class="sel-chip">형태: 일자</span>
+        <div class="toggle-row">
+          <span class="tg"><span class="tg-label">시공 범위</span><span class="switch on"><span class="knob"></span></span><span class="state on">전체시공</span> <span class="marker">3</span></span>
+        </div>
+        <div class="field"><label>내경 (폭) <span class="req">*</span></label><div class="input filled">1,200 <span class="unit">mm</span></div></div>
+        <div class="field"><label>외경 (폭) <span class="req">*</span></label><div class="input filled">1,300 <span class="unit">mm</span></div></div>
+        <div class="field"><label>서라운드전 높이 <span class="req">*</span></label><div class="input filled">2,150 <span class="unit">mm</span></div></div>
+        <div class="field"><label>전체 높이 <span class="req">*</span></label><div class="input filled">2,300 <span class="unit">mm</span></div></div>
+        <div class="field"><label>깊이 <span class="req">*</span></label><div class="input filled">590 <span class="unit">mm</span></div></div>
+        <p class="hint" style="padding-left:110px;margin-top:-4px;">기본값 590mm · 수정 가능 <span class="marker">4</span></p>
+        <div class="field"><label>좌 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+        <div class="field"><label>우 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+        <p class="hint">모든 치수 mm 정수.</p>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">다음</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 화면 ② 치수 — 일자·부분시공 -->
+  <div class="phone-col">
+    <div class="case-tag">화면 ② 치수 — 일자 · 부분시공<small>전체 높이·외경·깊이만</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <span class="sel-chip">형태: 일자</span>
+        <div class="toggle-row">
+          <span class="tg"><span class="tg-label">시공 범위</span><span class="switch"><span class="knob"></span></span><span class="state off">부분시공</span> <span class="marker">5</span></span>
+        </div>
+        <div class="field"><label>전체 높이 <span class="req">*</span></label><div class="input">1–5,000 <span class="unit">mm</span></div></div>
+        <div class="field"><label>외경 (폭) <span class="req">*</span></label><div class="input">1–5,000 <span class="unit">mm</span></div></div>
+        <div class="field"><label>깊이 <span class="req">*</span></label><div class="input filled">590 <span class="unit">mm</span></div></div>
+        <p class="hint">부분시공 시 내경·서라운드전 높이·좌/우 마감은 숨김.</p>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn disabled">다음</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 화면 ② 치수 — 코너 -->
+  <div class="phone-col">
+    <div class="case-tag">화면 ② 치수 — 코너 (ㄴ)<small>주 면은 이 화면에서 지정 · 전체시공 고정</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <span class="sel-chip">형태: 코너 ㄴ (벽 감쌈)</span>
+        <div class="toggle-row">
+          <span class="tg"><span class="tg-label">시공 범위</span><span class="switch lock"><span class="knob"></span></span><span class="state on">전체시공</span> <span class="locktxt">고정</span> <span class="marker">6</span></span>
+        </div>
+        <div class="bigwrap" data-big="nieun" data-primary="A"></div>
+        <p class="hint" style="text-align:center;">코너를 끝까지 차지하는 <b>주 면</b>을 탭하세요 · 각도 90° 고정 <span class="marker">7</span></p>
+        <div class="facebtns">
+          <div class="facebtn on">면 A<small>가로 벽</small></div>
+          <div class="facebtn">면 B<small>세로 벽</small></div>
+        </div>
+        <div class="sec-label">두 벽 길이</div>
+        <div class="field"><label>벽 A 길이 (가로) <span class="req">*</span></label><div class="input filled">1,800 <span class="unit">mm</span></div></div>
+        <div class="field"><label>벽 B 길이 (세로) <span class="req">*</span></label><div class="input filled">1,200 <span class="unit">mm</span></div></div>
+        <div class="common-box">
+          <div class="ph">높이 — 두 면 공통 <span class="marker">8</span></div>
+          <div class="field"><label>서라운드전 높이 <span class="req">*</span></label><div class="input filled">2,150 <span class="unit">mm</span></div></div>
+          <div class="field"><label>전체 높이 <span class="req">*</span></label><div class="input filled">2,300 <span class="unit">mm</span></div></div>
+          <p class="hint" style="color:var(--accent);">두 면이 같은 높이를 씁니다.</p>
+        </div>
+        <div class="panel">
+          <div class="ph">면 A (가로 벽) <span class="tag tag-main">주 면</span></div>
+          <div class="field"><label>깊이 <span class="req">*</span></label><div class="input filled">590 <span class="unit">mm</span></div></div>
+          <div class="field"><label>좌/우 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+          <div><span class="chip">면판 길이 = 벽 A 길이 + 종속 면 깊이 (자동)</span> <span class="marker">9</span></div>
+        </div>
+        <div class="panel">
+          <div class="ph">면 B (세로 벽) <span class="tag tag-sub">종속 면</span></div>
+          <div class="field"><label>깊이 <span class="req">*</span></label><div class="input filled">590 <span class="unit">mm</span></div></div>
+          <div class="field"><label>좌/우 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+          <div><span class="chip">면판 길이 = 벽 B 길이 그대로</span></div>
+        </div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn">다음</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 5: 유효성 에러 (일자·전체시공) -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 — 유효성 에러<small>미입력 · 범위 초과 · 상호 검증</small></div>
+    <div class="phone">
+      <div class="p-header"><span class="back">←</span> 실측 작업 <span class="item-tag">측정 중: 냉장고장</span></div>
+      <div class="stepper">
+        <div class="step done"><span class="dot">✓</span><span class="lb">현장 사진</span></div>
+        <div class="step-line"></div>
+        <div class="step cur"><span class="dot">2</span><span class="lb">영역 입력</span></div>
+        <div class="step-line"></div>
+        <div class="step"><span class="dot">3</span><span class="lb">레이아웃</span></div>
+      </div>
+      <div class="p-body">
+        <span class="sel-chip">형태: 일자</span>
+        <div class="toggle-row">
+          <span class="tg"><span class="tg-label">시공 범위</span><span class="switch on"><span class="knob"></span></span><span class="state on">전체시공</span></span>
+        </div>
+        <div class="field"><label>내경 (폭) <span class="req">*</span></label><div class="input error"></div></div>
+        <p class="err-msg">내경 값을 입력해주세요. <span class="marker">10</span></p>
+        <div class="field"><label>외경 (폭) <span class="req">*</span></label><div class="input error filled">1,100 <span class="unit">mm</span></div></div>
+        <p class="err-msg">외경은 내경 이상이어야 합니다.</p>
+        <div class="field"><label>서라운드전 높이 <span class="req">*</span></label><div class="input filled">2,400 <span class="unit">mm</span></div></div>
+        <div class="field"><label>전체 높이 <span class="req">*</span></label><div class="input error filled">2,300 <span class="unit">mm</span></div></div>
+        <p class="err-msg">전체 높이는 서라운드전 높이 이상이어야 합니다.</p>
+        <div class="field"><label>깊이 <span class="req">*</span></label><div class="input error filled">2,500 <span class="unit">mm</span></div></div>
+        <p class="err-msg">깊이 값은 1~2,000mm 범위로 입력해주세요.</p>
+        <div class="field"><label>좌 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+        <div class="field"><label>우 마감 <span class="req">*</span></label><div class="input filled">30 <span class="unit">mm</span></div></div>
+      </div>
+      <div class="p-footer">
+        <span class="p-btn outline">이전</span>
+        <span class="p-btn disabled">다음</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 / 메모</h3>
+  <ol>
+    <li><span class="marker">1</span> 현장 영역 입력은 <b>설치 형태 선택(①) → 치수 입력(②)</b> 두 화면으로 나뉜다. 형태 화면은 다섯 프리셋(일자 / ㄱ 안쪽 둘 / ㄴ 감쌈 둘) 그림으로만 고른다(한글 글자 라벨 없이 그림).</li>
+    <li><span class="marker">2</span> 프리셋은 위에서 본 평면. 코너는 가구가 벽을 바깥에서 감싸는 ㄴ자 형태 두 개(좌·우 한 쌍). 코너 안쪽(ㄱ자)으로 가구가 들어가는 형태는 냉장고에선 잘 쓰지 않아 1차 제외(싱크대 작업 시 데드 스페이스 처리와 함께 다룸).</li>
+    <li><span class="marker">3</span> 일자 시공 범위 토글: 전체시공(치수 7개) / 부분시공(전체 높이·외경·깊이만). 기본 전체시공.</li>
+    <li><span class="marker">4</span> 깊이 1–2,000mm·기본 590(수정 가능). 내경/외경/서라운드전/전체 1–5,000(외경≥내경, 전체≥서라운드전), 좌/우 마감 0–500. mm 정수.</li>
+    <li><span class="marker">5</span> 부분시공 시 내경·서라운드전 높이·좌/우 마감 숨김.</li>
+    <li><span class="marker">6</span> <b>코너는 시공 범위 = 전체시공으로 고정</b>(토글 잠금, 부분시공 불가).</li>
+    <li><span class="marker">7</span> <b>주 면 지정은 이 치수 화면에서</b> 한다. 큰 평면 그림에서 면 A(가로 벽)·면 B(세로 벽)를 탭해 주 면을 정하면, 점선이 맞물려 표시된다.</li>
+    <li><span class="marker">8</span> 코너는 두 면의 높이(서라운드전·전체)를 <b>공통으로 한 번만</b> 입력. 깊이·마감만 면별로.</li>
+    <li><span class="marker">9</span> 면판 길이 규칙 — 감쌈(ㄴ): 주 면 = 벽 길이 + 종속 면 깊이, 종속 면 = 벽 길이 그대로. 측정 벽 길이는 그대로, 재단 면판 길이만 가산.</li>
+    <li><span class="marker">10</span> 에러 문구는 명세 그대로(미입력·범위·외경≥내경·전체≥서라운드전). 한 화면에 모아 표시한 예시.</li>
+  </ol>
+  <h3 style="margin-top:14px;">아직 정할 것 · 임의 표현</h3>
+  <ol>
+    <li>코너에서 부분시공을 정말 막을지(전체시공 고정) 확인 필요 — 현재 고정으로 반영.</li>
+    <li>형태 화면과 치수 화면 사이를 [다음]으로 넘기는 2-스텝 방식. 스텝퍼는 영역 입력(2/3) 하나로 두고 그 안에서 ①→②.</li>
+    <li>치수 값·천 단위 구분자·토글 라벨·면판 칩 문구는 임의 표현.</li>
+  </ol>
+</div>
+
+<script>
+var DEPTH = 13;
+var GEO = {
+  nieun:   { vEnd:'bottom', hEnd:'left',
+    wallH:{x1:30,x2:80,y:62}, wallV:{x:30,y1:22,y2:62},
+    bandH:{x:17,y:62,w:63,h:13}, bandV:{x:17,y:22,w:13,h:53} },
+  nieunF:  { vEnd:'bottom', hEnd:'right',
+    wallH:{x1:20,x2:70,y:62}, wallV:{x:70,y1:22,y2:62},
+    bandH:{x:20,y:62,w:63,h:13}, bandV:{x:70,y:22,w:13,h:53} }
+};
+function cut(g, p){
+  var H={x:g.bandH.x,y:g.bandH.y,w:g.bandH.w,h:g.bandH.h};
+  var V={x:g.bandV.x,y:g.bandV.y,w:g.bandV.w,h:g.bandV.h};
+  // 감쌈(ㄴ): 주 면이 코너를 끝까지 차지, 종속 면 가산분 제거
+  if(p==='A'){ V.h-=DEPTH; }
+  else { if(g.hEnd==='left'){ H.x+=DEPTH; H.w-=DEPTH; } else { H.w-=DEPTH; } }
+  return { H:H, V:V };
+}
+function ln(x1,y1,x2,y2,c,w){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>'; }
+function db(b,stroke){ return '<rect x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" rx="1.5" fill="none" stroke="'+stroke+'" stroke-width="1.4" stroke-dasharray="3 2.5"/>'; }
+function iconFlat(sel){
+  var wc=sel?'var(--accent)':'var(--ink)', lc=sel?'var(--accent)':'var(--ink-faint)';
+  return '<svg viewBox="0 0 100 100" width="44" height="44">'
+    + '<rect x="20" y="30" width="60" height="18" rx="1.5" fill="none" stroke="'+lc+'" stroke-width="1.4" stroke-dasharray="3 2.5"/>'
+    + ln(18,26,82,26,wc,4.5) + '</svg>';
+}
+function iconCorner(shape,sel){
+  var g=GEO[shape];
+  var wc=sel?'var(--accent)':'var(--ink)', lc=sel?'var(--accent)':'var(--ink-faint)';
+  return '<svg viewBox="0 0 100 100" width="44" height="44">'
+    + db(g.bandH,lc) + db(g.bandV,lc)
+    + ln(g.wallH.x1,g.wallH.y,g.wallH.x2,g.wallH.y,wc,4.5)
+    + ln(g.wallV.x,g.wallV.y1,g.wallV.x,g.wallV.y2,wc,4.5)
+    + '</svg>';
+}
+function shapeIcon(shape,sel){ return shape==='flat'?iconFlat(sel):iconCorner(shape,sel); }
+function bigCorner(shape,primary){
+  var g=GEO[shape];
+  var c=cut(g,primary);
+  var aMain=primary==='A', bMain=primary==='B';
+  var aFill=aMain?'var(--accent-bg)':'#f3f2ec', aStroke=aMain?'var(--accent)':'var(--ink-faint)';
+  var bFill=bMain?'var(--accent-bg)':'#f3f2ec', bStroke=bMain?'var(--accent)':'var(--ink-faint)';
+  function band(b,face,fill,stroke,on){
+    return '<rect x="'+b.x+'" y="'+b.y+'" width="'+b.w+'" height="'+b.h+'" rx="1.5" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.6" stroke-dasharray="3 2.5"/>'
+      + '<text x="'+(b.x+b.w/2)+'" y="'+(b.y+b.h/2+3)+'" text-anchor="middle" font-size="8" font-weight="700" fill="'+(on?'var(--accent)':'var(--ink-soft)')+'">'+face+'</text>';
+  }
+  return '<svg viewBox="0 0 100 100" width="150" height="150">'
+    + band(c.H,'A',aFill,aStroke,aMain)
+    + band(c.V,'B',bFill,bStroke,bMain)
+    + ln(g.wallH.x1,g.wallH.y,g.wallH.x2,g.wallH.y,'var(--ink)',5)
+    + ln(g.wallV.x,g.wallV.y1,g.wallV.x,g.wallV.y2,'var(--ink)',5)
+    + '</svg>';
+}
+window.addEventListener('DOMContentLoaded', function(){
+  [].forEach.call(document.querySelectorAll('[data-icon]'), function(el){
+    el.insertAdjacentHTML('afterbegin', shapeIcon(el.getAttribute('data-icon'), el.classList.contains('sel')));
+  });
+  [].forEach.call(document.querySelectorAll('[data-big]'), function(el){
+    el.innerHTML = bigCorner(el.getAttribute('data-big'), el.getAttribute('data-primary')||'A');
+  });
+});
+</script>
+</body>
+</html>

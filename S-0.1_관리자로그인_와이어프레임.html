@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S-0.1 관리자 로그인 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --error: #a32d2d; --error-bg: #fcebeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1240px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+  .stage { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; align-items: center; }
+  .frame-col { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .case-tag { font-size: 13px; font-weight: 700; text-align: center; }
+  .case-tag small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+  .desktop { width: 1180px; max-width: 100%; height: 560px; background: #efeee9; border: 1px solid var(--line); border-radius: 14px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .login-card { width: 380px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 16px; padding: 34px 32px 28px; box-shadow: 0 8px 28px rgba(44,44,42,0.06); }
+  .logo { font-size: 21px; font-weight: 800; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .sub { font-size: 12px; color: var(--ink-faint); margin-bottom: 24px; }
+  .f-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; display: block; }
+  .f-box { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); padding: 11px 12px; margin-bottom: 14px; }
+  .f-box .ph { font-size: 12.5px; color: var(--ink-faint); flex: 1; }
+  .f-box .val { font-size: 13px; color: var(--ink); flex: 1; }
+  .f-box .ico { font-size: 13px; color: var(--ink-faint); margin-left: 8px; flex-shrink: 0; }
+  .f-box.err { border-color: var(--error); background: #fff7f7; margin-bottom: 4px; }
+  .field-err { font-size: 11px; color: var(--error); margin: 0 0 12px 2px; }
+  .login-btn { width: 100%; text-align: center; background: var(--ink); color: #fff; font-size: 14px; font-weight: 700; border-radius: 10px; padding: 13px 0; margin-top: 6px; }
+  .login-btn.dim { opacity: 0.35; }
+  .forgot { display: block; text-align: center; font-size: 12px; color: var(--accent); margin-top: 16px; text-decoration: underline; text-underline-offset: 3px; }
+  .banner { display: flex; align-items: center; gap: 8px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; border-radius: 9px; padding: 10px 12px; font-size: 12px; margin-bottom: 16px; }
+  .toast-stack { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; width: 420px; }
+  .toast { display: flex; align-items: center; gap: 8px; background: var(--error-bg); color: var(--error); border: 1px solid #f0c4c4; border-radius: 9px; padding: 10px 13px; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1240px; margin: 36px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위</div>
+  <h1>S-0.1 관리자 로그인 <small>관리자 / 데스크톱 웹 / 케이스 4종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- 케이스 1: 기본 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 1 — 기본 (빈 폼)<small>이메일·비밀번호 미입력 → [로그인] 비활성</small></div>
+    <div class="desktop">
+      <div class="login-card">
+        <div class="logo">SAIF</div>
+        <div class="sub">관리자 로그인 <span class="marker">1</span></div>
+        <span class="f-label">이메일</span>
+        <div class="f-box"><span class="ph">이메일 주소를 입력하세요</span></div>
+        <span class="f-label">비밀번호</span>
+        <div class="f-box"><span class="ph">비밀번호를 입력하세요</span><span class="ico">👁 <span class="marker">2</span></span></div>
+        <div class="login-btn dim">로그인 <span class="marker" style="background:#fff;color:var(--ink);">3</span></div>
+        <span class="forgot">비밀번호를 잊으셨나요? <span class="marker">4</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 2: 입력 완료 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 2 — 입력 완료<small>이메일 [X] 일괄 삭제 · 비밀번호 표시 토글 · [로그인] 활성</small></div>
+    <div class="desktop">
+      <div class="login-card">
+        <div class="logo">SAIF</div>
+        <div class="sub">관리자 로그인</div>
+        <span class="f-label">이메일</span>
+        <div class="f-box"><span class="val">admin@smartsink.co.kr</span><span class="ico">✕ <span class="marker">5</span></span></div>
+        <span class="f-label">비밀번호</span>
+        <div class="f-box"><span class="val">••••••••••</span><span class="ico">👁</span></div>
+        <div class="login-btn">로그인 <span class="marker" style="background:#fff;color:var(--ink);">6</span></div>
+        <span class="forgot">비밀번호를 잊으셨나요?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 3: 필드 유효성 에러 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 3 — 필드 유효성 에러<small>이메일 형식 오류 · 비밀번호 미입력 (포커스 이탈 시, 필드 하단)</small></div>
+    <div class="desktop">
+      <div class="login-card">
+        <div class="logo">SAIF</div>
+        <div class="sub">관리자 로그인</div>
+        <span class="f-label">이메일</span>
+        <div class="f-box err"><span class="val">admin@@smartsink</span><span class="ico">✕</span></div>
+        <p class="field-err">올바른 이메일 주소를 입력해주세요. <span class="marker">7</span></p>
+        <span class="f-label">비밀번호</span>
+        <div class="f-box err"><span class="ph">비밀번호를 입력하세요</span><span class="ico">👁</span></div>
+        <p class="field-err">비밀번호를 입력해주세요. <span class="marker">8</span></p>
+        <div class="login-btn dim">로그인</div>
+        <span class="forgot">비밀번호를 잊으셨나요?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 케이스 4: 서버 에러 -->
+  <div class="frame-col">
+    <div class="case-tag">케이스 4 — 인증 실패 · 서버 에러<small>폼 상단 배너 + 토스트 (어느 항목이 틀렸는지 비노출)</small></div>
+    <div class="desktop">
+      <div class="toast-stack">
+        <div class="toast">⚠ 비활성화된 계정입니다. 관리자에게 문의해주세요. <span class="marker" style="margin-left:auto;">A</span></div>
+        <div class="toast">⚠ 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</div>
+      </div>
+      <div class="login-card">
+        <div class="logo">SAIF</div>
+        <div class="sub">관리자 로그인</div>
+        <div class="banner">⚠ 이메일 또는 비밀번호가 올바르지 않습니다. <span class="marker" style="margin-left:auto;">9</span></div>
+        <span class="f-label">이메일</span>
+        <div class="f-box"><span class="val">admin@smartsink.co.kr</span><span class="ico">✕</span></div>
+        <span class="f-label">비밀번호</span>
+        <div class="f-box"><span class="val">••••••••••</span><span class="ico">👁</span></div>
+        <div class="login-btn">로그인</div>
+        <span class="forgot">비밀번호를 잊으셨나요?</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 S-0.1 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 데스크톱 웹 접속 시 기본 화면. 세션 유효 시 이 화면을 건너뛰고 [A-1.1 대시보드]로 이동. 로그인 성공 시에도 [A-1.1]로 이동. 관리자는 자동 로그인 토큰 없이 세션 기반 유지(만료 시 재로그인).</li>
+    <li><span class="marker">2</span> 비밀번호: 필수, 1자 이상 최대 100자, 기본 마스킹. 우측 눈 아이콘으로 표시/숨김 토글.</li>
+    <li><span class="marker">3</span> [로그인]: 이메일·비밀번호 둘 다 입력 시 활성 → 서버 인증 호출, 실패 시 에러 메시지.</li>
+    <li><span class="marker">4</span> [비밀번호를 잊으셨나요?] 링크: 항상 활성 → [S-0.3 비밀번호 재설정 안내]로 이동.</li>
+    <li><span class="marker">5</span> 이메일: 필수, 이메일 형식(RFC 5322 준용), 최대 100자. 입력 시 우측 [X] 버튼으로 일괄 삭제.</li>
+    <li><span class="marker">6</span> 두 필드 입력 완료 시 [로그인] 활성.</li>
+    <li><span class="marker">7</span> "이메일을 입력해주세요."(미입력 포커스 이탈) / "올바른 이메일 주소를 입력해주세요."(형식 오류) — 이메일 필드 하단, 명세 문구 그대로.</li>
+    <li><span class="marker">8</span> "비밀번호를 입력해주세요."(미입력 포커스 이탈) — 비밀번호 필드 하단, 명세 문구 그대로.</li>
+    <li><span class="marker">9</span> 인증 실패: "이메일 또는 비밀번호가 올바르지 않습니다." — 폼 상단 토스트/배너. 이메일·비밀번호 중 어느 것이 틀렸는지 구분해 노출하지 않음(보안) — 명세 그대로.</li>
+    <li><span class="marker">A</span> "비활성화된 계정입니다. 관리자에게 문의해주세요." / "일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요." — 폼 상단 토스트, 명세 문구 그대로.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현</h3>
+  <ol>
+    <li>중앙 카드형 레이아웃, SAIF 로고·"관리자 로그인" 부제, 필드 placeholder 문구는 임의 — 확정 필요.</li>
+    <li>케이스 4에서 배너(인증 실패)와 토스트(비활성·서버 오류)를 한 화면에 함께 그린 것은 표현 모음용이며, 실제로는 상황별 1개씩 노출.</li>
+    <li>유효성 에러 시 [로그인] 비활성 처리(케이스 3)는 활성 조건(둘 다 "입력")의 해석 — 형식 오류 시에도 활성로 둘지 확정 필요.</li>
+  </ol>
+</div>
+
+</body>
+</html>

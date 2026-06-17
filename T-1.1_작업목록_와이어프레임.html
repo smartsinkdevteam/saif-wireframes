@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-1.1 작업 목록 — 와이어프레임</title>
+<style>
+  :root {
+    --ink: #2c2c2a; --ink-soft: #5f5e5a; --ink-faint: #91908a;
+    --line: #d9d7cf; --line-soft: #e8e6df;
+    --paper: #fafaf7; --surface: #ffffff;
+    --accent: #185fa5; --accent-bg: #e6f1fb;
+    --teal: #0f6e56; --teal-bg: #e1f5ee;
+    --error: #a32d2d; --error-bg: #fcebeb;
+    --ok: #3b6d11; --ok-bg: #eaf3de;
+    --warn: #854f0b; --warn-bg: #faeeda;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif; background: var(--paper); color: var(--ink); padding: 40px 24px 64px; }
+  .doc-head { max-width: 1640px; margin: 0 auto 20px; }
+  .doc-head .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 6px; }
+  .doc-head h1 { font-size: 20px; font-weight: 600; }
+  .doc-head h1 small { font-weight: 400; color: var(--ink-soft); font-size: 14px; margin-left: 8px; }
+
+  .stage { max-width: 1640px; margin: 0 auto; display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .case-tag { font-size: 13px; font-weight: 700; }
+  .case-tag small { font-weight: 400; color: var(--ink-soft); font-size: 12px; margin-left: 6px; }
+
+  .phone { width: 360px; height: 720px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; }
+  .p-header { padding: 16px 18px 10px; font-size: 16px; font-weight: 700; display: flex; align-items: baseline; gap: 8px; }
+  .p-header .me { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--ink-soft); }
+  .p-body { flex: 1; overflow: hidden; padding: 0 14px; display: flex; flex-direction: column; }
+  .p-tabbar { border-top: 1px solid var(--line-soft); display: flex; background: var(--surface); }
+  .p-tab { flex: 1; text-align: center; padding: 10px 0 14px; font-size: 11.5px; color: var(--ink-faint); }
+  .p-tab .ic { display: block; font-size: 18px; margin-bottom: 2px; }
+  .p-tab.on { color: var(--accent); font-weight: 700; }
+
+  .search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 12.5px; color: var(--ink-faint); margin-bottom: 8px; }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; align-items: center; }
+  .chip { font-size: 11.5px; padding: 6px 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--ink-soft); background: var(--surface); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 600; }
+  .chip.dd { display: inline-flex; align-items: center; gap: 4px; }
+  .chip .caret { font-size: 9px; color: var(--ink-faint); }
+  .chip.on .caret { color: #fff; }
+
+  /* 날짜 네비게이터 (하루 이동) */
+  .date-nav { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; margin-bottom: 8px; }
+  .date-nav .arrow { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 7px; font-size: 13px; color: var(--ink-soft); }
+  .date-nav .cur { flex: 1; text-align: center; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .date-nav .cur .cal-ic { font-size: 13px; }
+  .date-nav .today-tag { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); border-radius: 99px; padding: 1px 7px; }
+
+  .cards { flex: 1; overflow: hidden; padding-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+  .card { border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px 14px; }
+  .card .row1 { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .card .name { font-size: 14px; font-weight: 700; }
+  .card .done-ic { margin-left: auto; color: var(--ok); font-size: 14px; }
+  .card .addr { font-size: 12px; color: var(--ink-soft); margin-bottom: 8px; }
+  .card .row3 { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-soft); }
+  .card .date { margin-left: auto; }
+  .badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .b-blue { background: var(--accent-bg); color: #0c447c; }
+  .b-teal { background: var(--teal-bg); color: var(--teal); }
+  .b-gray { background: #f1efe8; color: #5f5e5a; }
+  .b-amber { background: var(--warn-bg); color: #633806; }
+  .b-green { background: var(--ok-bg); color: var(--ok); }
+
+  .state-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+  .state-area .msg { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; }
+  .state-area .sub-ic { font-size: 24px; color: var(--ink-faint); }
+  .p-btn-sm { font-size: 12.5px; padding: 9px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+
+  .marker { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; vertical-align: -3px; flex-shrink: 0; }
+  .notes { max-width: 1640px; margin: 32px auto 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+  .notes h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .notes ol { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 날짜 필터 캘린더(하루 이동) 반영</div>
+  <h1>T-1.1 작업 목록 <small>기사 / 모바일 웹·PWA / 케이스 4종</small></h1>
+</div>
+
+<div class="stage">
+
+  <!-- ───────── 케이스 1: 기본 (겸임 기사) ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 1 — 기본 <small>겸임 기사 · 날짜 필터 "오늘"(기본값)</small></div>
+    <div class="phone">
+      <div class="p-header">작업 목록 <span class="marker">1</span><span class="me">박기사</span></div>
+      <div class="p-body">
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#91908a" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          고객명·주소 검색 (2자 이상) <span class="marker" style="margin-left:auto;">2</span>
+        </div>
+        <div class="filter-row">
+          <span class="chip on">전체</span><span class="chip">실측</span><span class="chip">시공</span>
+          <span class="chip dd">결제 상태 <span class="caret">▾</span></span>
+          <span class="marker">3</span>
+        </div>
+        <div class="date-nav">
+          <span class="arrow">‹</span>
+          <span class="cur"><span class="cal-ic">📅</span> 2026-06-12 (목) <span class="today-tag">오늘</span></span>
+          <span class="arrow">›</span>
+          <span class="marker">4</span>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="row1"><span class="badge b-blue">실측</span><span class="name">김OO</span><span class="marker">5</span></div>
+            <div class="addr">인천 연수구 OO로 12, 101동 1203호</div>
+            <div class="row3"><span class="badge b-amber">계약금 대기</span><span class="date">2026-06-12</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><span class="badge b-teal">시공</span><span class="name">최OO</span></div>
+            <div class="addr">경기 부천시 OO로 33</div>
+            <div class="row3"><span class="badge b-amber">잔금 대기</span><span class="date">2026-06-12</span></div>
+          </div>
+          <div class="card">
+            <div class="row1"><span class="badge b-blue">실측</span><span class="name">정OO</span><span class="done-ic">✓ 완료</span></div>
+            <div class="addr">인천 남동구 OO대로 90</div>
+            <div class="row3"><span class="badge b-green">잔금 완료</span><span class="date">2026-06-12</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="p-tabbar">
+        <div class="p-tab on"><span class="ic">📋</span>작업 목록</div>
+        <div class="p-tab"><span class="ic">⚙️</span>설정</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 2: 필터 결과 0건 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 2 — 필터 결과 0건 <small>검색·필터 적용 후 결과 없음</small></div>
+    <div class="phone">
+      <div class="p-header">작업 목록 <span class="me">박기사</span></div>
+      <div class="p-body">
+        <div class="search" style="color: var(--ink);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#91908a" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          강남구
+        </div>
+        <div class="filter-row">
+          <span class="chip">전체</span><span class="chip on">실측</span><span class="chip">시공</span>
+          <span class="chip dd">결제 상태 <span class="caret">▾</span></span>
+        </div>
+        <div class="date-nav">
+          <span class="arrow">‹</span>
+          <span class="cur"><span class="cal-ic">📅</span> 2026-06-14 (토)</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="state-area">
+          <div class="sub-ic">⌀</div>
+          <div class="msg">조건에 맞는 작업이 없습니다. <span class="marker">6</span></div>
+        </div>
+      </div>
+      <div class="p-tabbar">
+        <div class="p-tab on"><span class="ic">📋</span>작업 목록</div>
+        <div class="p-tab"><span class="ic">⚙️</span>설정</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 3: 배정 없음 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 3 — 배정 없음 <small>배정된 작업이 없는 상태</small></div>
+    <div class="phone">
+      <div class="p-header">작업 목록 <span class="me">박기사</span></div>
+      <div class="p-body">
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#91908a" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          고객명·주소 검색 (2자 이상)
+        </div>
+        <div class="filter-row">
+          <span class="chip on">전체</span><span class="chip">실측</span><span class="chip">시공</span>
+          <span class="chip dd">결제 상태 <span class="caret">▾</span></span>
+        </div>
+        <div class="date-nav">
+          <span class="arrow">‹</span>
+          <span class="cur"><span class="cal-ic">📅</span> 2026-06-12 (목) <span class="today-tag">오늘</span></span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="state-area">
+          <div class="sub-ic">📋</div>
+          <div class="msg">배정된 작업이 없습니다. <span class="marker">7</span></div>
+        </div>
+      </div>
+      <div class="p-tabbar">
+        <div class="p-tab on"><span class="ic">📋</span>작업 목록</div>
+        <div class="p-tab"><span class="ic">⚙️</span>설정</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── 케이스 4: 로딩 실패 ───────── -->
+  <div class="phone-col">
+    <div class="case-tag">케이스 4 — 로딩 실패 <small>당겨서 새로고침 안내</small></div>
+    <div class="phone">
+      <div class="p-header">작업 목록 <span class="me">박기사</span></div>
+      <div class="p-body">
+        <div class="state-area">
+          <div class="sub-ic">⚠</div>
+          <div class="msg">작업 목록을 불러올 수 없습니다.<br>화면을 아래로 당겨 새로고침해주세요. <span class="marker">8</span></div>
+          <span style="font-size:18px; color:var(--ink-faint);">↓</span>
+        </div>
+      </div>
+      <div class="p-tabbar">
+        <div class="p-tab on"><span class="ic">📋</span>작업 목록</div>
+        <div class="p-tab"><span class="ic">⚙️</span>설정</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>명세 반영 사항 (기능 명세서 T-1.1 기준)</h3>
+  <ol>
+    <li><span class="marker">1</span> 상단 헤더: 화면명 "작업 목록" + 본인 이름. 진입: 로그인 직후 / 하단 탭 바 [작업 목록]. 본인 배정 주문만 표시.</li>
+    <li><span class="marker">2</span> 검색: 고객명·주소 부분 일치, 2자 이상 입력 시 적용(관리자 주문 목록과 동일 방식).</li>
+    <li><span class="marker">3</span> 작업 유형 필터 — 담당 업무별: 실측만 = 전체/실측, 시공만 = 전체/시공, 겸임 = 전체/실측/시공. 케이스 1은 겸임 기사 기준. + 결제 상태 필터(계약금 대기/착수금 대기/잔금 대기/잔금 완료/환불 멀티 셀렉트, 미선택 시 전체). ※ 06-12 결정: 진행 상태 필터 제거 — 기사에게는 입금(결제) 상태 확인이 중요.</li>
+    <li><span class="marker">4</span> <b>날짜 필터(캘린더 — 하루 이동, 명세 반영)</b>: 캘린더에서 하루씩 이동(기본값 오늘). <b>이전/다음 날짜 화살표(‹ ›) + 날짜 선택</b>(가운데 날짜 탭 시 달력 피커). "오늘/이번 주/전체" 같은 기간 칩이 아니라 단일 날짜 네비게이터. 필터 변경 시 리스트 즉시 갱신.</li>
+    <li><span class="marker">5</span> 작업 카드: 작업 유형 배지(실측·시공 색 구분) + 고객명 + 주소 요약 + 결제 상태 배지(06-12 결정, 진행 상태 배지 대체) + 배정 일정 날짜(YYYY-MM-DD) + 완료 여부 체크. 카드 클릭 → [T-1.1.1 주문 상세 (기사)].</li>
+    <li><span class="marker">6</span> 필터 결과 0건: "조건에 맞는 작업이 없습니다."</li>
+    <li><span class="marker">7</span> 배정 없음: "배정된 작업이 없습니다." (1차에는 푸시 알림 없음 — 기사가 직접 목록을 열어 확인.)</li>
+    <li><span class="marker">8</span> 로딩 실패: "작업 목록을 불러올 수 없습니다. 화면을 아래로 당겨 새로고침해주세요." — 명세 문구 그대로.</li>
+  </ol>
+  <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
+  <ol>
+    <li>날짜 네비게이터의 형태(‹ 날짜 › + 요일·"오늘" 배지, 가운데 탭 시 달력)는 명세의 "하루씩 이동 + 이전/다음 화살표 + 날짜 선택"을 시각화한 것 — 세부 UI는 디자인 단계 확정.</li>
+    <li>작업 유형·결제 상태를 칩 UI로 표현 — UI 형식은 명세에 정의 없음.</li>
+    <li>실측=파랑, 시공=청록 배지 색 매핑은 임의 지정("시각 구분"만 명세에 정의). 완료 표시(✓ 완료)의 위치·형태도 임의.</li>
+    <li>당겨서 새로고침 화살표(↓) 표현은 임의. 샘플 데이터는 전부 가상의 예시.</li>
+  </ol>
+</div>
+
+</body>
+</html>
