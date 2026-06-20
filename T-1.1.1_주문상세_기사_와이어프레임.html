@@ -118,7 +118,7 @@
 <body>
 
 <div class="doc-head">
-  <div class="eyebrow">SAIF · 인터랙티브 프로토타입 · 1차 오픈 범위 · v4.1 — 역할·진행 단계 전환형 (기사 화면 결제 표시 = 착수금 대기)</div>
+  <div class="eyebrow">SAIF · 인터랙티브 프로토타입 · 1차 오픈 범위 · v5 — 역할·진행 단계 전환형 · 품목 변경 분리(실측=추가+취소 / 시공=추가만)</div>
   <h1>T-1.1.1 주문 상세 (기사) <small>모바일 웹·PWA</small></h1>
   <p>위 컨트롤로 <b>역할</b>(실측/시공)과 <b>진행 단계</b>를 바꾸면 화면이 그에 맞게 갱신됩니다. 품목 탭, 하단 완료 버튼, 입금 확인·품목 변경 시트, 실측 조회 화면은 모두 클릭해 동작을 확인할 수 있어요.</p>
 </div>
@@ -152,7 +152,7 @@
     <li>입금 확인 시트의 금액·결제방법 UI, 예상 잔금 자동 계산, 카드사 셀렉트는 명세 상세 정의 없음. [품목 변경]은 바텀시트, [실측 조회]는 전체 페이지로 표현(형태 정의 없음).</li>
     <li>한 주문에 여러 종류 품목(같은 종류 1개씩)은 1차 동작에 해당. 같은 종류 여러 개·별칭은 추후(데이터 모델만 선반영).</li>
     <li>섹션 구획·버튼 스타일·색상·샘플 데이터(치수·금액·연락처 등)는 전부 임의/가상.</li>
-    <li>[품목 변경] 시트는 시공 기사가 <b>본인 실측 담당 품목만 추가</b>할 수 있고 취소는 불가(취소는 실측 기사). 명세·PRD·유저 플로우와 정합.</li>
+    <li>[품목 변경] 버튼은 실측·시공 기사 <b>모두</b>에게 노출(실측 기사는 종전 "탭 클릭 시 전환" 안내 자리에 버튼이 들어감). 시트는 역할별로 다름 — 실측 기사는 품목 추가(종류+위치명)와 각 품목 <b>취소(✕)</b>가 둘 다 되고, 시공 기사는 <b>본인 실측 담당 품목 추가만</b>(취소 버튼 없음·종류도 본인 담당으로 제한). 추가·취소 모두 계약 확정을 무효화. 명세·PRD·유저 플로우와 정합.</li>
   </ol>
 </div>
 
@@ -430,9 +430,7 @@
     var panel;
     if (state.role === 'install') { panel = panelInstall(state.tab); }
     else { panel = state.tab === 'fridge' ? panelMeasureFridge() : panelMeasureCloset(); }
-    var head = state.role === 'install'
-      ? '<span class="spacer"></span><span class="btn-xs" data-act="open" data-val="items" style="cursor:pointer;">품목 변경</span>'
-      : '<span class="spacer"></span><span class="kv" style="font-size:10px;color:var(--ink-faint);">탭 클릭 시 전환</span>';
+    var head = '<span class="spacer"></span><span class="btn-xs" data-act="open" data-val="items" style="cursor:pointer;">품목 변경</span>';
     return '<div class="sec"><h4>품목 ' + head + '</h4>'
       + '<div class="tabs">'
       + '<span class="tab ' + (state.tab === 'fridge' ? 'on' : '') + '" data-act="tab" data-val="fridge" style="cursor:pointer;">' + fridgeTab + '</span>'
@@ -500,18 +498,43 @@
   }
 
   function itemsSheet() {
+    var isMeasure = state.role === 'measure';
+    var sub = isMeasure
+      ? '현장에서 품목을 추가하거나 뺄 수 있어요 · 실측 기사'
+      : '본인이 실측까지 맡는 품목을 추가합니다 · 시공 기사';
+    // 현재 품목을 인스턴스 단위(종류 + 위치명)로. 배지는 실측 시트=측정 상태, 시공 시트=시공 상태.
+    var rows = isMeasure
+      ? [{ type: '냉장고장', label: '주방', badge: '<span class="badge b-green">측정완료</span>' },
+         { type: '붙박이장', label: '현관', badge: '<span class="badge b-gray">미측정</span>' }]
+      : [{ type: '냉장고장', label: '주방', badge: '<span class="badge b-gray">시공 전</span>' },
+         { type: '붙박이장', label: '현관', badge: '<span class="badge b-teal">시공중</span>' }];
+    var list = rows.map(function (r, i) {
+      var del = isMeasure
+        ? '<span class="btn-xs" data-act="toast" data-msg="품목 취소 (order_item 삭제) — 계약 확정 무효화" style="cursor:pointer;">✕ 취소</span>'
+        : '';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;' + (i > 0 ? 'border-top:1px solid var(--line-soft);' : '') + '">'
+        + '<div style="flex:1;"><b style="font-size:12.5px;">' + r.type + '</b><div class="kv" style="font-size:10.5px;">' + r.label + '</div></div>'
+        + r.badge + del + '</div>';
+    }).join('');
+    var addTypes = isMeasure
+      ? '냉장고장 · 붙박이장 · 신발장 · 싱크대 &nbsp;·&nbsp; 위치명 비우면 자동 번호'
+      : '본인 실측 담당 품목만 &nbsp;·&nbsp; 위치명 비우면 자동 번호';
+    var addMsg = isMeasure
+      ? '품목 추가 (종류+위치명 → order_item 생성) — 계약 확정 무효화'
+      : '본인 실측 담당 품목 추가 (order_item 생성)';
+    var listNote = isMeasure ? '' : '<div class="kv" style="font-size:10.5px;margin-top:5px;color:var(--ink-faint);">품목 취소는 실측 기사만 가능합니다.</div>';
     return '<div class="ov-backdrop" data-act="close"></div>'
       + '<div class="sheet"><div class="grab"></div>'
       + '<h4 style="font-size:14px;font-weight:700;">품목 변경</h4>'
-      + '<div class="kv" style="margin-top:-4px;">현장에서 본인이 실측까지 맡는 품목을 추가합니다.</div>'
-      + '<div class="sec" style="padding:8px 11px;">'
-      + '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;"><b style="flex:1;">냉장고장</b><span class="badge b-gray">시공 전</span></div>'
-      + '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line-soft);"><b style="flex:1;">붙박이장</b><span class="badge b-teal">시공중</span></div>'
-      + '<div class="kv" style="font-size:10.5px;margin-top:5px;color:var(--ink-faint);">품목 취소는 실측 기사만 가능합니다.</div></div>'
+      + '<div class="kv" style="margin-top:-4px;">' + sub + '</div>'
+      + '<div class="sec" style="padding:2px 11px;">' + list + listNote + '</div>'
       + '<div class="sec" style="padding:8px 11px;"><h4 style="margin-bottom:7px;">＋ 품목 추가</h4>'
-      + '<div style="display:flex;gap:6px;align-items:center;"><span style="flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;color:var(--ink-soft);">품목 종류 선택 ▾</span><span class="btn-xs" data-act="toast" data-msg="본인 실측 담당 품목 추가 (order_item 생성)" style="background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer;">추가</span></div>'
-      + '<div class="kv" style="font-size:10.5px;margin-top:5px;">냉장고장 · 붙박이장 · 신발장 · 싱크대</div></div>'
-      + '<div class="toast" style="background:var(--warn-bg);color:var(--warn);border:1px solid #ecd3a6;font-size:11px;align-items:flex-start;">⚠ 품목을 추가하면 계약 확정이 무효화되어 계약서를 다시 작성해야 합니다.</div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">'
+      + '<span style="flex:0 0 96px;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;color:var(--ink-soft);">종류 ▾</span>'
+      + '<span style="flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12px;color:var(--ink-faint);">위치명 · 선택</span>'
+      + '<span class="btn-xs" data-act="toast" data-msg="' + addMsg + '" style="background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer;">추가</span></div>'
+      + '<div class="kv" style="font-size:10.5px;margin-top:5px;">' + addTypes + '</div></div>'
+      + '<div class="toast" style="background:var(--warn-bg);color:var(--warn);border:1px solid #ecd3a6;font-size:11px;align-items:flex-start;">⚠ 품목을 추가하거나 취소하면 계약 확정이 무효화되어 계약서를 다시 작성해야 합니다.</div>'
       + '<button class="btn-pri" data-act="close">완료</button>'
       + '<button class="btn-out" data-act="close">닫기</button></div>';
   }

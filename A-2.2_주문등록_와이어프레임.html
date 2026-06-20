@@ -87,6 +87,14 @@
   .box.err { border-color: var(--error); }
   .caret { font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 
+  /* 시공 품목 줄 목록 (다품목·인스턴스) */
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item-row { display: flex; align-items: center; gap: 8px; }
+  .item-row .item-sel { flex: 0 0 150px; }
+  .item-row .item-label { flex: 1; }
+  .item-del { flex: 0 0 auto; color: var(--ink-faint); padding: 6px 9px; }
+  .item-add { align-self: flex-start; border-style: dashed; color: var(--accent); }
+
   .upload {
     border: 1.5px dashed var(--line); border-radius: 8px;
     min-height: 90px; display: flex; flex-direction: column;
@@ -155,7 +163,7 @@
 <body>
 
 <div class="doc-head">
-  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 시공범위 다품목 + 주문/상담 경로 반영</div>
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 시공 품목 다품목·인스턴스(줄 목록) + 주문/상담 경로 반영</div>
   <h1>A-2.2 주문 등록 <small>관리자 / 데스크톱 웹 / 케이스 6종</small></h1>
 </div>
 
@@ -205,14 +213,16 @@
       <h3>현장·계약 정보</h3>
       <div class="grid">
         <div class="field full">
-          <label>시공범위 <span class="req">*</span> <span class="marker">4</span></label>
-          <div class="check-group">
-            <span class="check"><span class="box"></span> 냉장고장</span>
-            <span class="check"><span class="box"></span> 붙박이장</span>
-            <span class="check"><span class="box"></span> 신발장</span>
-            <span class="check"><span class="box"></span> 싱크대</span>
+          <label>시공 품목 <span class="req">*</span> <span class="marker">4</span></label>
+          <div class="item-list">
+            <div class="item-row">
+              <div class="input item-sel">품목 종류 <span class="caret">▾</span></div>
+              <div class="input item-label">위치명 (선택) · 예: 주방</div>
+              <button class="btn sm item-del">✕</button>
+            </div>
+            <button class="btn sm item-add">＋ 품목 추가</button>
           </div>
-          <p class="hint">여러 종류 선택 가능(같은 종류는 1개씩) · 최소 1개</p>
+          <p class="hint">한 줄이 품목 하나 · 같은 종류도 줄을 추가해 여러 개 등록 · 위치명은 비우면 자동 번호 · 최소 1개</p>
         </div>
         <div class="field">
           <label>주문 경로 <span class="opt">(선택)</span> <span class="marker">5</span></label>
@@ -261,7 +271,7 @@
 </div>
 
 <!-- ───────── 케이스 2: 조건부 필드 ───────── -->
-<div class="case-label">케이스 2 — 조건부 필드 활성 <small>여러 품목 선택 + 계약금 있음 + 결제방법 "카드"</small></div>
+<div class="case-label">케이스 2 — 조건부 필드 활성 <small>다품목(냉장고장 2개+붙박이장) + 계약금 있음 + 결제방법 "카드"</small></div>
 <div class="screen">
   <nav class="gnb">
     <div class="logo">SAIF</div>
@@ -277,13 +287,26 @@
       <h3>현장·계약 정보</h3>
       <div class="grid">
         <div class="field full">
-          <label>시공범위 <span class="req">*</span></label>
-          <div class="check-group">
-            <span class="check"><span class="box on">✓</span> 냉장고장</span>
-            <span class="check"><span class="box on">✓</span> 붙박이장</span>
-            <span class="check"><span class="box"></span> 신발장</span>
-            <span class="check"><span class="box"></span> 싱크대</span>
+          <label>시공 품목 <span class="req">*</span></label>
+          <div class="item-list">
+            <div class="item-row">
+              <div class="input filled item-sel">냉장고장 <span class="caret">▾</span></div>
+              <div class="input filled item-label">주방</div>
+              <button class="btn sm item-del">✕</button>
+            </div>
+            <div class="item-row">
+              <div class="input filled item-sel">냉장고장 <span class="caret">▾</span></div>
+              <div class="input item-label">위치명 (선택) · 비우면 "냉장고장 2"</div>
+              <button class="btn sm item-del">✕</button>
+            </div>
+            <div class="item-row">
+              <div class="input filled item-sel">붙박이장 <span class="caret">▾</span></div>
+              <div class="input filled item-label">현관</div>
+              <button class="btn sm item-del">✕</button>
+            </div>
+            <button class="btn sm item-add">＋ 품목 추가</button>
           </div>
+          <p class="hint">냉장고장 2개(주방·미입력) + 붙박이장 1개 — 같은 종류를 줄로 여러 개. 각 줄이 order_items 인스턴스 1개.</p>
         </div>
         <div class="field">
           <label>주문 경로 <span class="opt">(선택)</span></label>
@@ -409,14 +432,16 @@
       <h3>현장·계약 정보</h3>
       <div class="grid">
         <div class="field full">
-          <label>시공범위 <span class="req">*</span></label>
-          <div class="check-group">
-            <span class="check"><span class="box err"></span> 냉장고장</span>
-            <span class="check"><span class="box err"></span> 붙박이장</span>
-            <span class="check"><span class="box err"></span> 신발장</span>
-            <span class="check"><span class="box err"></span> 싱크대</span>
+          <label>시공 품목 <span class="req">*</span></label>
+          <div class="item-list">
+            <div class="item-row">
+              <div class="input item-sel error">품목 종류 <span class="caret">▾</span></div>
+              <div class="input item-label">위치명 (선택)</div>
+              <button class="btn sm item-del">✕</button>
+            </div>
+            <button class="btn sm item-add">＋ 품목 추가</button>
           </div>
-          <span class="err-msg">시공범위를 1개 이상 선택해주세요.</span>
+          <span class="err-msg">시공 품목을 1개 이상 추가하고 종류를 선택해주세요.</span>
         </div>
         <div class="field">
           <label>실측일 <span class="req">*</span></label>
@@ -471,7 +496,7 @@
     <li><span class="marker">1</span> 진입: [A-2.1 주문 목록]의 [+ 새 주문 등록]. 저장 완료 후 생성된 [A-2.3 주문 상세]로 이동.</li>
     <li><span class="marker">2</span> 연락처: 숫자·하이픈만, 입력 중 자동 하이픈. 11자리 휴대전화 또는 9–10자리 지역번호 허용.</li>
     <li><span class="marker">3</span> 주소: 카카오 우편번호 서비스 팝업 → 자동 채움(읽기 전용). 검색 DB 미등재 주소는 [직접 입력] 폴백.</li>
-    <li><span class="marker">4</span> <b>시공범위(다품목 반영)</b>: 체크박스 그룹, 최소 1개. <b>여러 종류 선택 가능(같은 종류는 1개씩)</b> — 냉장고장·붙박이장·신발장·싱크대. 1차 노출 품목은 운영 정의. 같은 종류 여러 개·별칭은 추후(데이터 모델만 선반영).</li>
+    <li><span class="marker">4</span> <b>시공 품목(다품목·인스턴스)</b>: 품목 줄 목록. 한 줄 = order_items 인스턴스 1개. [＋ 품목 추가]로 줄을 늘리고 줄마다 종류(드롭다운)·위치명 라벨(선택)을 입력. <b>같은 종류도 줄을 추가해 여러 개 등록 가능</b>(예: 냉장고장 2개). 위치명을 비우면 자동 번호("냉장고장 1·2")가 유지되고, 비운 줄은 실측 기사가 현장에서 품목 탭으로 채울 수 있음. 최소 1개. 종전 체크박스 그리드를 폐기 — 줄을 추가하는 것이 곧 품목 추가이고, 시공범위는 order_items에서 도출(단일 출처). 종류 옵션(냉장고장·붙박이장·신발장·싱크대)은 운영 정의·공통 코드.</li>
     <li><span class="marker">5</span> <b>주문 경로·상담 경로(신규 반영)</b>: 주문 경로(선택, 셀렉트 — 박람회/블로그/인스타그램/지인 소개/숨고/기타), 상담 경로(선택, 셀렉트 — 톡톡/카톡/전화/숨고채팅). 둘 다 공통 코드(보기값).</li>
     <li><span class="marker">6</span> 실측일: 오늘 이후~최대 6개월. 필드 클릭 시 [전체 스케줄] 모달(케이스 3).</li>
     <li><span class="marker">7</span> 계약금 있음: 기본 미체크. 체크 시 금액 필드 활성·필수 전환, 기본값 50,000원(수정 가능). 해제 시 비활성·값 초기화. 0 이상 정수, 최대 1억원.</li>
@@ -487,7 +512,7 @@
   </ol>
   <h3 style="margin-top:16px;">⚠️ 문서에 없는 임의 표현 (와이어프레임 작성자 판단)</h3>
   <ol>
-    <li>시공범위 4종(냉장고장·붙박이장·신발장·싱크대)·주문/상담 경로 옵션 값은 명세 표기. 1차 노출 품목·경로 옵션의 최종 목록은 운영 정의·공통 코드 상세(개발 단계).</li>
+    <li>시공 품목 종류 4종(냉장고장·붙박이장·신발장·싱크대)·주문/상담 경로 옵션 값은 명세 표기. 1차 노출 품목·경로 옵션의 최종 목록은 운영 정의·공통 코드 상세(개발 단계). 품목 줄 목록의 행 레이아웃(종류 드롭다운+위치명+삭제)·[＋ 품목 추가] 위치·위치명 자동 번호 표기는 임의 — 확정 필요.</li>
     <li>섹션 4분할(고객 정보/현장·계약/특이사항/사진), 2단 그리드 배치·섹션 카드 스타일·필드 순서는 임의.</li>
     <li>필수 표시(*), 플레이스홀더 문구, 토스트의 아이콘·색상은 임의 표현.</li>
     <li>케이스 3 캘린더 스택 칩의 표기 형식("실측 김기사")과 [닫기] 버튼, 케이스 5 모달의 문구·버튼 라벨은 명세에 상세 정의 없음 — 임의 작성, 확정 필요.</li>
