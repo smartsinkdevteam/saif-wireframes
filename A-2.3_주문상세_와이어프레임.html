@@ -128,7 +128,7 @@
 <body>
 
 <div class="doc-head">
-  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 계약서 품목별 금액 표기(합계와 함께)·계약서 PDF 다운로드 제거 / 착수금 입금 처리 모달(상태 선택 없음)·금액·결제방법 / 비실측 품목 인쇄 제외</div>
+  <div class="eyebrow">SAIF · 와이어프레임 · 1차 오픈 범위 · 계약서 품목별 금액 표기(합계와 함께)·계약서 PDF 다운로드 제거 / 작업지시서 브라우저 인쇄(PDF 저장 없음·품목당 한 장) / 결제 상태 변경 모달(5개 상태 자유 이동) / 비실측 품목 인쇄 제외</div>
   <h1>A-2.3 주문 상세 <small>관리자 / 데스크톱 웹 / 케이스 7종</small></h1>
 </div>
 
@@ -151,7 +151,7 @@
       <span class="badge b-amber">잔금 대기</span>
       <span class="spacer"></span>
       <button class="btn sm">상태 변경</button>
-      <button class="btn sm">착수금 입금 처리</button>
+      <button class="btn sm">결제 상태 변경</button>
       <button class="btn sm">수정</button>
     </div>
 
@@ -201,7 +201,7 @@
 
       <div class="sub-block">
         <h4>작업지시서 <span class="spacer"></span><button class="btn sm">작업지시서 인쇄</button><span class="marker">6</span></h4>
-        <p class="tooltip">실측 완료 이상에서 노출 · 클릭 시 품목 선택 팝업(케이스 6) → 품목당 개별 PDF</p>
+        <p class="tooltip">실측 완료 이상에서 노출 · 클릭 시 품목 선택 팝업(케이스 6) → 브라우저 인쇄(품목당 한 장)</p>
       </div>
     </div>
 
@@ -215,7 +215,7 @@
       <div class="sub-block" style="border-top:none; margin-top:0; padding-top:0;">
         <h4>실측 <span class="badge b-green">측정완료</span></h4>
         <div class="dims">
-          <span class="dim-chip">내경 1,200</span><span class="dim-chip">외경 1,300</span><span class="dim-chip">서라운드전 2,150</span><span class="dim-chip">전체 높이 2,300</span><span class="dim-chip">깊이 590</span><span class="dim-chip">좌 30 / 우 30</span><span class="dim-chip">콘센트 있음</span>
+          <span class="dim-chip">내경 1,200</span><span class="dim-chip">외경 1,300</span><span class="dim-chip">서라운드전 2,150</span><span class="dim-chip">전체 높이 2,300</span><span class="dim-chip">깊이 590</span><span class="dim-chip">좌 30 / 우 30</span>
         </div>
         <div class="kv" style="margin-top:10px;">
           <span class="k">실측 메모</span><span class="v full-v">우측 벽 단차 있음, 걸레받이 철거 필요</span>
@@ -266,7 +266,7 @@
       <span class="badge b-amber">계약금 대기</span>
       <span class="spacer"></span>
       <button class="btn sm">상태 변경</button>
-      <button class="btn sm">착수금 입금 처리</button>
+      <button class="btn sm">결제 상태 변경</button>
       <button class="btn sm">수정</button>
     </div>
 
@@ -341,34 +341,43 @@
 </div>
 
 <!-- ───────── 케이스 4: 결제 상태 변경 모달 ───────── -->
-<div class="case-label">케이스 4 — [착수금 입금 처리] 모달 <small>관리자가 받아온 착수금을 입력 → 잔금 대기로 전이</small></div>
+<div class="case-label">케이스 4 — [결제 상태 변경] 모달 <small>5개 결제 상태 자유 이동 · 처리일·금액·결제방법·메모</small></div>
 <div class="modal-stage">
   <div class="modal">
-    <h3>착수금 입금 처리 <span class="marker">D</span></h3>
-    <p class="sub">현재 상태: 착수금 대기 → 처리 시 "잔금 대기"로 전이</p>
+    <h3>결제 상태 변경 <span class="marker">D</span></h3>
+    <p class="sub">현재 상태: 착수금 대기 · 어느 상태로든 변경 가능</p>
+    <label style="font-size:12px;color:var(--ink-soft);">변경할 상태 <span class="req">*</span></label>
+    <div style="display:flex;flex-wrap:wrap;gap:4px 16px;margin:7px 0 4px;">
+      <div class="radio-line"><span class="radio"></span> 계약금 대기</div>
+      <div class="radio-line"><span class="radio on"></span> 착수금 대기</div>
+      <div class="radio-line"><span class="radio"></span> 잔금 대기</div>
+      <div class="radio-line"><span class="radio"></span> 잔금 완료</div>
+      <div class="radio-line"><span class="radio"></span> 환불</div>
+    </div>
+    <p class="tooltip" style="margin-bottom:12px;">5개 상태 자유 이동(운영 정정·환불 양방향 허용). 착수금 입금 확인도 여기서 "착수금 대기"→"잔금 대기"로 처리 <span class="marker">E</span></p>
     <div class="field">
-      <label>금액 <span class="req">*</span> <span class="marker">E</span></label>
+      <label>처리일 <span class="req">*</span></label>
+      <div class="input filled">2026-06-12</div>
+      <p class="tooltip">오늘 이하 · "환불" 선택 시 라벨이 "환불일"로 표시</p>
+    </div>
+    <div class="field">
+      <label>금액 <span class="req">*</span></label>
       <div class="input filled" style="font-weight:700;">200,000 <span style="font-weight:400;color:var(--ink-faint);margin-left:auto;">원</span></div>
-      <p class="tooltip">받아온 착수금 금액</p>
+      <p class="tooltip">"잔금 완료" 전이 시 입력 금액을 총 시공 비용과 비교 검증</p>
     </div>
     <div class="field">
       <label>결제방법 <span class="req">*</span></label>
       <div class="input filled">카드 <span class="caret">▾</span></div>
-      <p class="tooltip">현금 / 계좌이체 / 카드 / 상품권 / 기타 (공통 코드). "카드" 시 카드사·끝 4자리는 개발 단계 상세</p>
-    </div>
-    <div class="field">
-      <label>처리일 <span class="req">*</span></label>
-      <div class="input filled">2026-06-12</div>
-      <p class="tooltip">오늘 이하</p>
+      <p class="tooltip">현금 / 계좌이체 / 카드 / 상품권 / 기타 (공통 코드)</p>
     </div>
     <div class="field">
       <label>메모</label>
       <div class="input area">선택 · 최대 500자</div>
     </div>
-    <div class="info-band">착수금·잔금은 대부분 기사가 현장에서 받아오고, 계약서 [작성 완료](고객 서명+착수금 수령) 시 기사가 "착수금 대기"→"잔금 대기"로 전이. 이 모달은 관리자가 받아온 착수금을 직접 입력하는 용도(상태 선택 없이 입력 시 자동 전이). 모든 전이는 payment_events에 기록(금액·결제방법·처리자 포함) <span class="marker">F</span></div>
+    <div class="info-band">착수금 입금 확인은 실측 기사·관리자가, 잔금 입금 확인은 관리자만(계좌이체 등 수단 무관). 기사는 계약서 [작성 완료](고객 서명+착수금 수령) 후 주문 상세에서 착수금 입금 확인 → "착수금 대기"→"잔금 대기" 전이(계약서가 착수금보다 먼저 존재). 관리자는 이 모달에서 같은 전이를 일으키거나 환불·운영 정정 등을 보정. 모든 전이는 payment_events에 기록(금액·결제방법·처리자 포함) <span class="marker">F</span></div>
     <div class="modal-actions">
       <button class="btn sm">취소</button>
-      <button class="btn sm primary">처리</button>
+      <button class="btn sm primary">변경</button>
     </div>
   </div>
 </div>
@@ -397,15 +406,15 @@
 </div>
 
 <!-- ───────── 케이스 6: 작업지시서 품목 선택 팝업 ───────── -->
-<div class="case-label">케이스 6 — [작업지시서 인쇄] 품목 선택 팝업 <small>실측 도면 있는 품목만 · 비실측 품목 제외 · 품목당 개별 PDF</small></div>
+<div class="case-label">케이스 6 — [작업지시서 인쇄] 품목 선택 팝업 <small>실측 도면 있는 품목만 · 비실측 품목 제외 · 품목당 한 장 인쇄</small></div>
 <div class="modal-stage" style="min-height:340px;">
   <div class="modal">
     <h3>작업지시서 인쇄 <span class="marker">I</span></h3>
-    <p class="sub">선택한 품목마다 개별 PDF가 생성됩니다. (기본 전체 선택)</p>
+    <p class="sub">선택한 품목을 브라우저 인쇄로 한 번에 출력합니다 · 품목당 한 장(PDF 저장 없음). (기본 전체 선택)</p>
     <div class="checkline"><span class="box on">✓</span> 냉장고장 <span class="badge b-green" style="margin-left:6px;">측정완료</span></div>
     <div class="checkline" style="color:#c4c2ba;"><span class="box" style="background:var(--paper);"></span> 붙박이장 <span class="badge b-gray" style="margin-left:6px;">미측정</span> <span class="tooltip" style="margin-left:6px;">실측 완료 후 인쇄 가능</span></div>
     <div class="checkline" style="color:#c4c2ba;"><span class="box" style="background:var(--paper);"></span> 신발장 <span class="badge b-green" style="margin-left:6px;">측정완료</span> <span class="tooltip" style="margin-left:6px;">비실측 품목 — 도면·자재 없어 인쇄 대상 아님 <span class="marker">J</span></span></div>
-    <div class="info-band" style="margin-top:10px;">PDF 내용(품목 단위): 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함 <span class="marker">K</span></div>
+    <div class="info-band" style="margin-top:10px;">인쇄 내용(품목 단위): 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함 <span class="marker">K</span></div>
     <div class="modal-actions">
       <button class="btn sm">취소</button>
       <button class="btn sm primary">인쇄</button>
@@ -433,7 +442,7 @@
 <div class="notes">
   <h3>명세 반영 사항 (기능 명세서 A-2.3 기준)</h3>
   <ol>
-    <li><span class="marker">1</span> 헤더: 주문번호 + 진행 상태·결제 상태 배지("생산 · 잔금 대기" 통합 표시, 보류 시 "[보류]" 접두) + [상태 변경]·[착수금 입금 처리]·[수정]. 진행 상태 배지는 생략 가능(진행 요약 배지·목록과 일관). [상태 변경]은 품목 탭 아래에도 노출. [수정]은 종료·취소 시 비활성 → A-2.4.</li>
+    <li><span class="marker">1</span> 헤더: 주문번호 + 진행 상태·결제 상태 배지("생산 · 잔금 대기" 통합 표시, 보류 시 "[보류]" 접두) + [상태 변경]·[결제 상태 변경]·[수정]. 진행 상태 배지는 생략 가능(진행 요약 배지·목록과 일관). [상태 변경]은 품목 탭 아래에도 노출. [수정]은 종료·취소 시 비활성 → A-2.4.</li>
     <li><span class="marker">2</span> 진행 요약 배지: 실측·시공 = n/N 품목 분수+세그먼트 바, 생산 = 시공 준비된 품목 수. 색상 완료=초록/진행 중=파랑/대기=회색. 배지 호버 시 품목별 상태 툴팁. 계약(보류/확정) 배지는 이 줄에 표시하지 않고 공통 영역 계약서 섹션에서만 표시(06-12 결정).</li>
     <li><span class="marker">3</span> 공통 영역: 고객·현장, 계약금·결제방법, 고객 제공 사진(조회만), 계약서(품목별 금액·합계·상태), 실측 기사 배정, 작업지시서. 기사 입력물은 조회 전용.</li>
     <li><span class="marker">4</span> 결제방법 카드 표시 형식: "카드 · 신한 끝 1234".</li>
@@ -445,14 +454,14 @@
     <li><span class="marker">A</span> [실측 기사 배정](최초): 접수 + 미배정 시 활성.</li>
     <li><span class="marker">B</span> 비활성 버튼은 사유 툴팁 표시(예: "실측 완료 후 배정 가능").</li>
     <li><span class="marker">C</span> 상태 변경 모달: 보류(사유 필수 1–500자)/보류 해제(보류일 때만)/종료(사유 필수)/취소(시공 완료·종료·취소 외, 영구 종결). 사유 미입력 시 "사유를 입력해주세요."</li>
-    <li><span class="marker">D</span> 착수금 입금 처리: 관리자가 받아온 착수금을 입력하는 모달. <b>"변경할 상태" 선택 없음</b> — 입력하면 "착수금 대기"→"잔금 대기"로 자동 전이. (※ 명세 A-2.3엔 [결제 상태 변경]이 5개 상태 자유 이동으로 적혀 있으나, 실제 운영은 착수금 받아온 입력만 하므로 이 모달로 단순화 — 명세 문구 정리 필요. 환불·운영 정정 등 그 외 상태 보정 경로는 추후/확정.)</li>
-    <li><span class="marker">E</span> <b>금액·결제방법(명세 반영)</b>: 입력 = <b>금액(숫자, 필수)</b> + <b>결제방법(셀렉트, 필수)</b> + 처리일(필수, 오늘 이하) + 메모(선택 500자). payment_events에 금액·결제방법 기록. (명세상 "잔금 완료" 전이 시 입력 금액을 총 시공 비용과 비교 검증 — 잔금 처리 흐름에 적용.)</li>
+    <li><span class="marker">D</span> 결제 상태 변경(명세 채택): 헤더 [결제 상태 변경] → 이 모달. 계약금 대기 / 착수금 대기 / 잔금 대기 / 잔금 완료 / 환불 중 <b>어느 상태로든 자유 이동</b>(운영 정정·환불 양방향 허용). 착수금 입금 확인도 이 모달에서 "착수금 대기"→"잔금 대기"로 처리(별도 단순화 모달 없이 흡수). 이전 와이어프레임의 [착수금 입금 처리] 단순화 모달은 명세에 맞춰 폐기.</li>
+    <li><span class="marker">E</span> <b>입력(명세 반영)</b>: 변경할 상태(5개 중 택1, 필수) + 처리일(필수, 오늘 이하·"환불" 시 "환불일") + <b>금액(숫자, 필수)</b> + <b>결제방법(셀렉트, 필수)</b> + 메모(선택 500자). payment_events에 금액·결제방법·처리자 기록. "잔금 완료" 전이 시 입력 금액을 총 시공 비용과 비교 검증.</li>
     <li><span class="marker">F</span> <b>전이 주체(06-12 결정)</b>: 기존 "착수금 입금 시 계약서 자동 생성" 문구는 잘못이라 제거. 착수금·잔금은 대부분 기사가 현장에서 수령하며, 계약서 [작성 완료](고객 서명+착수금 수령) 시 "착수금 대기"→"잔금 대기"로 전이된다(계약서가 착수금보다 먼저 존재). 이 모달은 관리자가 받아온 착수금을 직접 입력해 같은 전이를 일으키는 경로. 모든 전이는 payment_events 기록.</li>
     <li><span class="marker">G</span> 배정 모달(실측·시공 공통): 날짜(전체 스케줄 모달 재사용) + 기사 셀렉트. 1차는 시간 미지정·자동 중복 검증 없음.</li>
     <li><span class="marker">H</span> 기사 후보 필터: 실측 = 시공범위 전 품목 취급 / 시공 = 해당 품목 취급. 이름·연락처 표시.</li>
-    <li><span class="marker">I</span> 품목 선택 팝업: 기본 전체 선택, 도면 있는 품목만 체크 가능. [인쇄] 시 품목당 개별 PDF(zip 묶음 여부는 개발 시 결정). PDF 생성 실패 시 "작업지시서를 생성하는 데 실패했습니다..."</li>
+    <li><span class="marker">I</span> 품목 선택 팝업: 기본 전체 선택, 도면 있는 품목만 체크 가능. [인쇄] 시 선택 품목을 한 문서로 묶어 브라우저 인쇄(window.print()), 품목 사이 페이지 나눔(break-before: page)으로 품목당 한 장 — PDF 파일로 저장하지 않음(출력 이력·재발행용 보관본만 work_orders.pdf_key로 별도 저장). 생성 실패 시 "작업지시서를 생성하는 데 실패했습니다..."</li>
     <li><span class="marker">J</span> <b>비실측 품목 제외(명세 반영)</b>: 미측정 품목은 비활성("실측 완료 후 인쇄 가능"). <b>냉장고장 외 비실측 품목은 측정완료여도 도면·자재가 없어 인쇄 대상에서 제외(measurements 부재로 판별).</b></li>
-    <li><span class="marker">K</span> <b>PDF 내용(명세 반영)</b>: 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함. (세부 서식은 개발 공유 디자인 시안서)</li>
+    <li><span class="marker">K</span> <b>인쇄 내용(명세 반영)</b>: 고객·현장 주소 · 해당 품목 · <b>레이아웃 · 도어 크기</b> · 합판 재단 도면 · 자재 수량 · 앞밴드(가림막) 유무. 상부서라운드 필요 시 100×2400×n 규격 포함. (세부 서식은 개발 공유 디자인 시안서)</li>
     <li><span class="marker">L</span> 에러: 조회 실패 / 권한 없음(다른 회사 주문) — 명세 문구 그대로.</li>
     <li><span class="marker">M</span> <b>계약서 표시(이번 수정)</b>: 공통 영역 계약서는 <b>품목별 금액 + 합계 + 상태</b>를 보여준다(품목별 금액은 T-1.3에서 실측 기사가 입력한 값, 여기서는 조회만). <b>PDF 다운로드 버튼은 제거</b> — 고객 청구서 PDF가 필요하면 별도 [고객 청구서 PDF 발송] 경로로 처리(추후/확정).</li>
   </ol>
